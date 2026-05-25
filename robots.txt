@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Блокировка служебных путей сборки Vercel и Next.js
+Disallow: /_next/
+Disallow: /_vercel/
+Disallow: /static/
+
+# Ссылка на карту сайта
+Sitemap: https://vercel.app
