@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  
+  <!-- 🔹 Production-ready CSP -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ws: wss:; media-src 'self' blob:;">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- 🔹 Логотип -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  
+  <title>anti-ai-qwen-academy • Prompt Designer / Neuroillustrator</title>
+  
+  <style>
+    :root {
+      --bg: #0a0c14; --surface: rgba(20,24,36,0.95); --glass: rgba(255,255,255,0.06);
+      --text: #e6eaf0; --muted: #8a92a6;
+      --accent: #00d4ff; --qwen: #615ef0; --qwen-glow: rgba(97,94,240,0.3);
+      --prompt: #e91e63; --prompt-glow: rgba(233,30,99,0.3);
+      --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --gold: #ffd700;
+      --font: system-ui, -apple-system, "Segoe UI", monospace;
+      --radius: 14px; --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; justify-content: center; padding: 16px; }
+    button, .btn, .tab-btn { user-select: none; -webkit-tap-highlight-color: transparent; }
+    .code-block, .lesson-content, .cert-id, .lib-item p, .lesson-input, .case-text { user-select: text; }
+    
+    #app { width: 100%; max-width: 860px; background: var(--surface); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; }
+    #app::before { content: ''; position: absolute; top: -30%; left: -20%; width: 140%; height: 140%; background: radial-gradient(circle at 20% 20%, var(--prompt-glow), transparent 50%), radial-gradient(circle at 80% 80%, rgba(0,212,255,0.08), transparent 50%); pointer-events: none; z-index: 0; }
+
+    .hero-section { text-align: center; padding: 10px 0 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    
+    /* 🔹 Логотип */
+    .logo-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:10px; flex-wrap:wrap; }
+    .logo-img { width:52px; height:52px; object-fit:contain; border-radius:8px; border:1px solid rgba(233,30,99,0.3); flex-shrink:0; }
+    .logo-fallback { display:none; align-items:center; justify-content:center; width:52px; height:52px; background:linear-gradient(135deg, var(--prompt), var(--accent)); border-radius:8px; font-size:1.5rem; font-weight:bold; color:#fff; flex-shrink:0; border:1px solid rgba(233,30,99,0.4); }
+    .logo-fallback svg { width:32px; height:32px; }
+    
+    .hero-img { max-width: 100%; height: auto; border-radius: 12px; margin: 12px 0; border: 1px solid rgba(233,30,99,0.3); }
+    .hero-fallback { padding: 20px; background: linear-gradient(135deg, rgba(233,30,99,0.15), rgba(0,212,255,0.1)); border-radius: 12px; margin: 12px 0; border: 2px dashed var(--prompt); text-align: center; }
+    .badge-qwen { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, var(--prompt), #c2185b); color: #fff; border-radius: 20px; font-weight: bold; margin: 8px 4px; font-size: 0.85rem; }
+    .badge-gold { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, var(--gold), #ffed4e); color: #000; border-radius: 20px; font-weight: bold; margin: 8px 4px; font-size: 0.85rem; }
+    .update-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--success); margin-top: 8px; }
+    .update-indicator.live::before { content: ''; width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .concept-card { background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); transition: var(--transition); }
+    .concept-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px var(--prompt-glow); border-color: var(--prompt); }
+    .concept-card img { width: 100%; height: 120px; object-fit: cover; display: block; }
+    .concept-icon { width: 100%; height: 120px; background: linear-gradient(135deg, rgba(233,30,99,0.2), rgba(0,212,255,0.15)); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+    .concept-caption { padding: 10px; font-size: 0.8rem; color: var(--muted); text-align: center; font-weight: 600; }
+
+    h1 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 0; }
+    h1 .brand { color: var(--prompt) !important; font-weight: 700; }
+    h1 .sep { color: var(--muted) !important; margin: 0 6px; }
+    h1 .spec { color: var(--text) !important; }
+    
+    .hdr-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+    #langBtn, #guideBtn, #voiceBtn { background: var(--glass); border: 1px solid rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 8px; color: var(--text); cursor: pointer; font-weight: bold; transition: var(--transition); font-size: 0.8rem; }
+    #langBtn:hover, #guideBtn:hover, #voiceBtn:hover { border-color: var(--prompt); box-shadow: 0 0 15px var(--prompt-glow); }
+    #voiceBtn.active { background: rgba(233,30,99,0.2); border-color: var(--prompt); color: var(--prompt); }
+
+    .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+    .tab-btn { flex: 1; padding: 10px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: var(--muted); font-weight: 600; cursor: pointer; transition: var(--transition); white-space: nowrap; }
+    .tab-btn.active { background: rgba(233,30,99,0.15); border-color: var(--prompt); color: var(--prompt); box-shadow: 0 0 20px var(--prompt-glow); }
+
+    .tab-content { display: none; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+    .tab-content.active { display: flex; }
+    .tab-content::-webkit-scrollbar { width: 6px; }
+    .tab-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+    .card { background: rgba(0,0,0,0.35); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); transition: var(--transition); }
+    .card h3 { color: var(--gold); margin-bottom: 6px; font-size: 0.9rem; }
+    .card p, .card li { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+    .card ul, .card ol { padding-left: 18px; margin-top: 4px; }
+
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; margin: 2px; }
+    .tag-qwen { background: rgba(233,30,99,0.2); border: 1px solid var(--prompt); color: var(--prompt); }
+    .tag-green { background: rgba(46,204,113,0.2); border: 1px solid var(--success); color: var(--success); }
+    .tag-blue { background: rgba(0,212,255,0.2); border: 1px solid var(--accent); color: var(--accent); }
+
+    .lesson-card { background: rgba(255,255,255,0.03); padding: 14px; border-radius: 10px; margin: 8px 0; border-left: 3px solid var(--muted); transition: var(--transition); }
+    .lesson-card.locked { opacity: 0.4; pointer-events: none; filter: grayscale(0.8); }
+    .lesson-card.active { border-left-color: var(--prompt); }
+    .lesson-card.completed { border-left-color: var(--success); opacity: 0.7; }
+    .lesson-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .lesson-title { font-weight: bold; color: var(--prompt); font-size: 0.95rem; }
+    .lesson-status { padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+    .lesson-status.locked { background: rgba(255,255,255,0.1); color: var(--muted); }
+    .lesson-status.active { background: rgba(233,30,99,0.2); color: var(--prompt); }
+    .lesson-status.completed { background: rgba(46,204,113,0.2); color: var(--success); }
+    .lesson-content { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+    .case-text { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; font-size: 0.85rem; margin: 8px 0; border-left: 3px solid var(--accent); white-space: pre-wrap; }
+    .lesson-task { background: rgba(233,30,99,0.08); padding: 10px; border-radius: 8px; margin: 8px 0; font-size: 0.8rem; border: 1px solid rgba(233,30,99,0.2); }
+    .qwen-format { background: rgba(0,212,255,0.08); padding: 8px; border-radius: 6px; margin: 8px 0; font-size: 0.75rem; font-family: monospace; border: 1px dashed var(--accent); color: var(--accent); }
+    .lesson-input { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: var(--text); margin: 8px 0; font-family: var(--font); min-height: 80px; resize: vertical; }
+    .lesson-input:focus { border-color: var(--prompt); box-shadow: 0 0 0 2px var(--prompt-glow); }
+    .lesson-feedback { margin-top: 8px; padding: 10px; border-radius: 6px; font-size: 0.82rem; display: none; }
+    .lesson-feedback.success { background: rgba(46,204,113,0.1); border: 1px solid var(--success); color: var(--success); }
+    .lesson-feedback.error { background: rgba(231,76,60,0.1); border: 1px solid var(--danger); color: #ff8a8a; }
+
+    .exam-question { margin: 16px 0; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
+    .exam-question.answered { border-color: var(--prompt); }
+    .exam-options label { display: block; margin: 6px 0; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; }
+    .exam-options label:hover { background: rgba(255,255,255,0.08); }
+    .exam-options input[type="radio"] { margin-right: 8px; accent-color: var(--prompt); }
+
+    .certificate { background: linear-gradient(135deg, rgba(233,30,99,0.15), rgba(0,212,255,0.15)); border: 3px solid var(--prompt); border-radius: 16px; padding: 30px; text-align: center; margin: 12px 0; position: relative; overflow: hidden; box-shadow: 0 0 40px var(--prompt-glow); }
+    .certificate::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(233,30,99,0.03) 10px, rgba(233,30,99,0.03) 20px); animation: shimmer 3s linear infinite; }
+    @keyframes shimmer { 0%{transform:translate(-50%,-50%)} 100%{transform:translate(0,0)} }
+    .certificate-content { position: relative; z-index: 1; }
+    .certificate h3 { color: var(--prompt); margin-bottom: 12px; font-size: 1.5rem; }
+    .certificate p { font-size: 0.9rem; color: var(--text); margin: 6px 0; }
+    .cert-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, var(--prompt), #c2185b); color: #fff; border-radius: 25px; font-weight: bold; margin: 12px 0; box-shadow: 0 4px 15px var(--prompt-glow); }
+    .cert-id { font-family: monospace; background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 6px; color: var(--prompt); display: inline-block; margin: 8px 0; }
+    .cert-seal { width: 80px; height: 80px; border: 3px solid var(--prompt); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 16px auto; background: rgba(233,30,99,0.1); font-size: 2rem; box-shadow: 0 0 20px var(--prompt-glow); }
+    .cert-validator { margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; text-align: left; }
+    .cert-validator input { width: 100%; padding: 8px; margin: 8px 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: var(--text); font-family: monospace; }
+
+    .pipeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+    .pipeline-card { background: rgba(233,30,99,0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(233,30,99,0.2); }
+    .pipeline-card h4 { color: var(--prompt); margin-bottom: 6px; font-size: 0.85rem; }
+    .pipeline-card p { font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+    .pipeline-card .fmt { font-family: monospace; font-size: 0.7rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0; }
+    .skill-card { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border-left: 3px solid var(--accent); }
+    .skill-card h4 { color: var(--gold); margin-bottom: 8px; font-size: 0.9rem; }
+    .skill-card li { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+
+    .warning-box { background: rgba(243,156,18,0.1); border-left: 4px solid var(--warning); padding: 12px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 0.8rem; }
+    .warning-box strong { color: var(--warning); }
+
+    .collab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 12px 0; }
+    .collab-card { padding: 10px; border-radius: 8px; font-size: 0.8rem; }
+    .collab-card.green { background: rgba(46,204,113,0.1); border: 1px solid var(--success); }
+    .collab-card.yellow { background: rgba(243,156,18,0.1); border: 1px solid var(--warning); }
+    .collab-card.orange { background: rgba(230,126,34,0.1); border: 1px solid #e67e22; }
+    .collab-card.blue { background: rgba(0,212,255,0.1); border: 1px solid var(--accent); }
+    .collab-card h4 { margin-bottom: 4px; }
+    .collab-card p { font-size: 0.75rem; color: var(--muted); }
+
+    /* 🔹 Новые компоненты для Промпт-дизайнера */
+    .prompt-builder { background: rgba(233,30,99,0.1); border: 1px solid var(--prompt); border-radius: 10px; padding: 14px; margin: 12px 0; }
+    .prompt-builder textarea { width: 100%; min-height: 100px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: var(--text); padding: 10px; font-family: var(--font); font-size: 0.85rem; }
+    .prompt-builder textarea:focus { border-color: var(--prompt); box-shadow: 0 0 0 2px var(--prompt-glow); }
+    
+    .prompt-params { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; }
+    .prompt-param { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; }
+    .prompt-param label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+    .prompt-param input, .prompt-param select { width: 100%; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text); font-size: 0.8rem; }
+    
+    .style-preview { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0; }
+    .style-chip { flex-shrink: 0; padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; font-size: 0.75rem; cursor: pointer; transition: var(--transition); }
+    .style-chip:hover, .style-chip.active { border-color: var(--prompt); background: rgba(233,30,99,0.2); }
+    
+    .ethics-checklist { margin: 12px 0; }
+    .ethics-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .ethics-item:last-child { border-bottom: none; }
+    .ethics-item input { margin-top: 4px; accent-color: var(--success); }
+    .ethics-item label { font-size: 0.85rem; color: var(--muted); }
+    .ethics-item.warning label { color: var(--warning); }
+    .ethics-item.danger label { color: var(--danger); }
+    
+    .prompt-doc-preview { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; color: var(--accent); margin: 8px 0; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+    
+    .audience-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .audience-chip { padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; font-size: 0.75rem; cursor: pointer; transition: var(--transition); }
+    .audience-chip:hover, .audience-chip.active { border-color: var(--prompt); background: rgba(233,30,99,0.2); }
+
+    /* 🔹 Библиотека знаний */
+    .library-section { margin-bottom: 16px; }
+    .library-section h4 { color: var(--prompt); margin: 12px 0 8px; font-size: 1rem; }
+    .library-section ul { padding-left: 20px; font-size: 0.85rem; color: var(--muted); }
+    .library-section li { margin-bottom: 4px; }
+    .library-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 12px 0; }
+    .library-card { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border-left: 3px solid var(--prompt); }
+    .library-card h5 { color: var(--gold); margin-bottom: 6px; font-size: 0.9rem; }
+    .library-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+    input, textarea, select { width: 100%; padding: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: var(--text); font-family: var(--font); outline: none; }
+    input:focus, textarea:focus { border-color: var(--prompt); box-shadow: 0 0 0 2px var(--prompt-glow); }
+
+    .btn { padding: 10px 14px; background: linear-gradient(135deg, var(--prompt), #c2185b); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 15px var(--prompt-glow); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--prompt-glow); }
+    .btn.secondary { background: var(--glass); color: var(--text); border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
+    .btn.danger { background: linear-gradient(135deg, var(--danger), #c0392b); color: #fff; }
+    .btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+    .skill-item { margin: 10px 0; }
+    .skill-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+    .skill-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+    .skill-fill { height: 100%; background: linear-gradient(90deg, var(--prompt), var(--accent)); width: 0%; transition: width 0.8s ease; }
+
+    .support { text-align: center; padding: 14px; background: linear-gradient(135deg, rgba(233,30,99,0.1), rgba(0,212,255,0.1)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
+    .support h3 { color: var(--prompt); margin-bottom: 8px; }
+    .support p { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    footer { text-align: center; color: var(--muted); font-size: 0.7rem; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
+
+    .modal { position: fixed; inset: 0; background: rgba(2,2,8,0.92); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+    .modal.open { display: flex; }
+    .modal-content { background: var(--surface); padding: 24px; border-radius: 16px; border: 1px solid rgba(233,30,99,0.3); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+
+    .materials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin: 12px 0; }
+    .material-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid var(--prompt); }
+    .material-item h4 { color: var(--prompt); font-size: 0.85rem; margin-bottom: 4px; }
+    .material-item p { font-size: 0.75rem; color: var(--muted); }
+    .material-item .fmt { font-family: monospace; font-size: 0.7rem; color: var(--accent); background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
+
+    @media(max-width:480px) {
+      #app { padding: 14px; } h1 { font-size: 1rem; }
+      .logo-img, .logo-fallback { width:40px; height:40px; }
+      .tab-btn { padding: 8px; font-size: 0.75rem; } .card { padding: 10px; }
+      .btn { padding: 8px 10px; font-size: 0.8rem; }
+      .concept-grid { grid-template-columns: 1fr 1fr; }
+      .pipeline-grid, .library-grid { grid-template-columns: 1fr; }
+      .certificate { padding: 20px; }
+      .prompt-params { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<main id="app">
+  <div class="hero-section">
+    <!-- 🔹 ВИДИМЫЙ ЛОГОТИП + ТЕКСТ -->
+    <div class="logo-row">
+      <img src="favicon.ico" alt="anti-ai-qwen-academy" class="logo-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="logo-fallback" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h1>
+        <span class="brand">anti-ai-qwen-academy</span>
+        <span class="sep">•</span>
+        <span class="spec">Prompt Designer / Neuroillustrator</span>
+      </h1>
+    </div>
+    
+    <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;" data-i18n="hero_subtitle">
+      Library Hub • 100% Offline • 10 days • Ethical AI Art
+    </p>
+    
+    <!-- 🔹 Hero изображение -->
+    <img src="assets/images/hero-prompt-designer.png" alt="Prompt Designer Course" class="hero-img" 
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+    <div class="hero-fallback" style="display:none;">
+      <p style="font-size:3rem; margin-bottom:8px;">🎨🤖</p>
+      <p style="color:var(--prompt); font-weight:bold; font-size:1.1rem;" data-i18n="qwen_title">
+        Anti-AI Qwen Academy: Prompt Designer Specialist
+      </p>
+      <p style="font-size:0.8rem; margin-top:8px;">
+        🎓 10 days • 🏛️ Library Hub • 🔐 Offline • ✍️ Ethical Prompt Design
+      </p>
+    </div>
+
+    <div style="margin:12px 0;">
+      <span class="badge-qwen">✍️ Prompt Eng</span>
+      <span class="badge-qwen">🎨 Style Adapt</span>
+      <span class="badge-qwen">⚖️ Ethics First</span>
+      <span class="badge-gold">💼 Volunteer/Grant</span>
+    </div>
+
+    <div class="hdr-actions">
+      <button id="guideBtn" onclick="app.openModal('guideModal')">📖 <span data-i18n="guide_btn">10-Day Plan</span></button>
+      <button id="voiceBtn" onclick="app.toggleVoice()">🔇</button>
+      <button id="langBtn" onclick="app.toggleLang()">🌐 EN</button>
+    </div>
+  </div>
+
+  <!-- 🔹 Concept Grid с изображениями -->
+  <div class="concept-grid">
+    <div class="concept-card">
+      <img src="assets/images/prompt-fundamentals.png" alt="Prompt Fundamentals" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>✍️</div><div class=\'concept-caption\'>Prompt Basics</div>'">
+      <div class="concept-caption" data-i18n="concept1">✍️ Prompt Basics</div>
+    </div>
+    <div class="concept-card">
+      <img src="assets/images/style-adaptation.png" alt="Style Adaptation" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>🎨</div><div class=\'concept-caption\'>Style Adapt</div>'">
+      <div class="concept-caption" data-i18n="concept2">🎨 Style Adapt</div>
+    </div>
+    <div class="concept-card">
+      <img src="assets/images/ethics-check.png" alt="Ethics Check" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>⚖️</div><div class=\'concept-caption\'>Ethics</div>'">
+      <div class="concept-caption" data-i18n="concept3">⚖️ Ethics</div>
+    </div>
+    <div class="concept-card">
+      <img src="assets/images/tech-params.png" alt="Technical Parameters" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>🛠️</div><div class=\'concept-caption\'>Tech Params</div>'">
+      <div class="concept-caption" data-i18n="concept4">🛠️ Tech Params</div>
+    </div>
+    <div class="concept-card">
+      <img src="assets/images/education.png" alt="Education & Outreach" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>🎓</div><div class=\'concept-caption\'>Teach Others</div>'">
+      <div class="concept-caption" data-i18n="concept5">🎓 Teach Others</div>
+    </div>
+    <div class="concept-card">
+      <img src="assets/images/portfolio-doc.png" alt="Portfolio Documentation" onerror="this.parentElement.innerHTML='<div class=\'concept-icon\'>📁</div><div class=\'concept-caption\'>Portfolio</div>'">
+      <div class="concept-caption" data-i18n="concept6">📁 Portfolio</div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="course" data-i18n="tab_course">🎓 Course</button>
+    <button class="tab-btn" data-tab="tools" data-i18n="tab_tools">🛠️ Tools</button>
+    <button class="tab-btn" data-tab="library" data-i18n="tab_library">📚 Library</button>
+    <button class="tab-btn" data-tab="progress" data-i18n="tab_progress">📅 Progress</button>
+  </nav>
+
+  <!-- 🎓 COURSE -->
+  <section id="course" class="tab-content active">
+    <div class="card" style="border: 2px solid var(--prompt); background: linear-gradient(135deg, rgba(233,30,99,0.1), rgba(0,212,255,0.1));">
+      <h3 style="color: var(--prompt); text-align: center;" data-i18n="cert_conditions">🏆 CERTIFICATE REQUIREMENTS</h3>
+      <div style="display: flex; justify-content: center; gap: 16px; margin: 12px 0; flex-wrap: wrap;">
+        <div style="text-align: center;"><div style="font-size: 2rem;">📚</div><b>10/10 lessons</b><br><span style="font-size: 0.8rem; color: var(--muted);" data-i18n="cond1_sub">Prompt Design + Qwen formats</span></div>
+        <div style="text-align: center;"><div style="font-size: 2rem;">🧠</div><b>10/10 exam</b><br><span style="font-size: 0.8rem; color: var(--muted);" data-i18n="cond2_sub">No mistakes</span></div>
+        <div style="text-align: center;"><div style="font-size: 2rem;">📁</div><b data-i18n="cond3">Portfolio</b><br><span style="font-size: 0.8rem; color: var(--muted);" data-i18n="cond3_sub">5 cases in Qwen formats</span></div>
+      </div>
+      <p style="text-align: center; font-size: 0.85rem; color: var(--muted);" data-i18n="cert_warning">⚠️ Perfect results → Library Contributor access</p>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="progress_title">📊 Progress</h3>
+      <div class="skill-item">
+        <div class="skill-label"><span data-i18n="lessons_done">Lessons completed</span><span id="courseProgress">0/10</span></div>
+        <div class="skill-bar"><div class="skill-fill" id="courseBar" style="width:0%"></div></div>
+      </div>
+      <div style="margin-top:12px; text-align:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+        <button class="btn danger" onclick="app.resetProgress()" style="font-size:0.8rem; width:100%;" data-i18n="reset_btn">🔄 Reset</button>
+        <p style="font-size:0.7rem; color:var(--muted); margin-top:6px;" data-i18n="reset_warning">⚠️ All data will be deleted</p>
+      </div>
+    </div>
+
+    <div id="lessonsContainer"></div>
+    <div id="examContainer"></div>
+
+    <!-- CERTIFICATE -->
+    <div class="certificate" id="certificateBox" style="display:none;">
+      <div class="certificate-content">
+        <div class="cert-seal">🎨</div>
+        <h3 data-i18n="cert_heading">🎓 CERTIFICATE</h3>
+        <p style="font-size:1rem; margin:8px 0; color:var(--prompt);">
+          <b data-i18n="cert_course">Course: <span id="certCourseDisplay">Qwen Prompt Designer / Neuroillustrator Specialist</span></b>
+        </p>
+        <p data-i18n="cert_confirms">This certifies that</p>
+        <p style="font-size:1.2rem; color:var(--gold); margin:8px 0; font-weight:bold;" data-i18n="cert_who">Certified Prompt Designer / Neuroillustrator Specialist</p>
+        <p data-i18n="cert_completed">has successfully completed the ethical AI art creation course for library and educational projects</p>
+        <div class="cert-id" id="certIdDisplay">QWEN-PROMPT-XXXXXX</div>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:8px;">
+          <span data-i18n="cert_issuer">Issuer:</span> <span id="certIssuerDisplay">Anti-AI Qwen Academy</span>
+        </p>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:4px;">
+          <span data-i18n="cert_pipeline">Pipeline:</span> <span id="certPipelineDisplay">qwen-prompt-designer-ethics</span>
+        </p>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:4px;">
+          <span data-i18n="cert_compliance">Compliance:</span> <span id="certComplianceDisplay">tongyi_safety_v2, iso_iec_42001, creative_commons</span>
+        </p>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:4px;" data-i18n="cert_date_label">Date: <span id="certDateDisplay"></span></p>
+        <div style="margin:12px 0;">
+          <button class="btn secondary" onclick="app.exportCertificate()" style="font-size:0.8rem; margin-right:8px;" data-i18n="cert_download">💾 JSON</button>
+          <button class="btn secondary" onclick="app.exportQwenPortfolio()" style="font-size:0.8rem; margin-right:8px;" data-i18n="cert_qwen_export">📤 Qwen Format</button>
+          <button class="btn secondary" onclick="app.printCertificate()" style="font-size:0.8rem;" data-i18n="cert_print">🖨️ Print</button>
+        </div>
+        <div class="cert-badge" data-i18n="cert_badge">Qwen Prompt Designer Specialist</div>
+        <div class="btn-group" style="justify-content:center; margin-top:16px; flex-wrap:wrap;">
+          <button class="btn" onclick="app.printCertificate()" data-i18n="cert_print">🖨️ Print / PDF</button>
+          <button class="btn secondary" onclick="app.switchTab('tools')" data-i18n="cert_practice">🛠️ Tools</button>
+        </div>
+        <div class="cert-validator">
+          <h4 style="color:var(--prompt); margin:0 0 8px 0;" data-i18n="cert_validate_title">🔍 Verify Certificate</h4>
+          <input type="text" id="validateInput" placeholder="QWEN-PROMPT-XXXXXX" pattern="QWEN-PROMPT-[A-Z0-9]{6}">
+          <button class="btn secondary" onclick="app.validateCertificate()" style="width:100%; font-size:0.8rem;" data-i18n="cert_validate_btn">✅ Check</button>
+          <div id="validateResult" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
+        </div>
+        <p style="font-size:0.75rem; color:var(--muted); margin-top:12px;" data-i18n="cert_security">🔒 Offline • SHA-256 • Qwen-compatible • CC-BY-SA</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🛠️ TOOLS -->
+  <section id="tools" class="tab-content">
+    <div class="card" style="text-align:center; border-color:var(--prompt);">
+      <h3 data-i18n="tools_title">🛠️ Prompt Designer Toolkit</h3>
+      <p style="font-size:0.85rem; color:var(--muted); margin-top:8px;" data-i18n="tools_subtitle">Interactive tools for ethical prompt design practice</p>
+    </div>
+    
+    <!-- Prompt Builder -->
+    <div class="card">
+      <h4 style="color:var(--prompt);">✍️ <span data-i18n="prompt_builder">Prompt Builder</span></h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin:4px 0;" data-i18n="prompt_desc">Craft effective, ethical prompts for image generation</p>
+      <div class="prompt-builder">
+        <textarea id="promptInput" placeholder="Describe your image idea... e.g., 'A diverse group of children reading books in a cozy library, warm lighting, watercolor style'"></textarea>
+        
+        <div class="prompt-params">
+          <div class="prompt-param">
+            <label>Model</label>
+            <select id="modelSelect">
+              <option value="midjourney">Midjourney v6</option>
+              <option value="sd">Stable Diffusion XL</option>
+              <option value="kandinsky">Kandinsky 3</option>
+              <option value="flux">Flux.1</option>
+            </select>
+          </div>
+          <div class="prompt-param">
+            <label>Aspect Ratio</label>
+            <select id="aspectSelect">
+              <option value="1:1">1:1 Square</option>
+              <option value="16:9">16:9 Landscape</option>
+              <option value="9:16">9:16 Portrait</option>
+              <option value="4:3">4:3 Standard</option>
+            </select>
+          </div>
+          <div class="prompt-param">
+            <label>Style</label>
+            <select id="styleSelect">
+              <option value="realistic">Photorealistic</option>
+              <option value="illustration">Illustration</option>
+              <option value="watercolor">Watercolor</option>
+              <option value="minimal">Minimalist</option>
+              <option value="vintage">Vintage</option>
+            </select>
+          </div>
+          <div class="prompt-param">
+            <label>Seed (optional)</label>
+            <!-- ✅ Валидация seed: только положительные числа -->
+            <input type="number" id="seedInput" placeholder="Random" min="0" max="999999">
+          </div>
+        </div>
+        
+        <div style="margin:12px 0;">
+          <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;" data-i18n="negative_prompts">Negative Prompts (what to avoid):</label>
+          <textarea id="negativeInput" placeholder="blurry, distorted, watermark, text, signature, low quality" style="min-height:60px;"></textarea>
+        </div>
+        
+        <div style="margin:12px 0;">
+          <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;" data-i18n="audience_adapter">Target Audience:</label>
+          <div class="audience-selector">
+            <span class="audience-chip active" data-audience="general">👥 General</span>
+            <span class="audience-chip" data-audience="children">🧒 Children</span>
+            <span class="audience-chip" data-audience="seniors">👵 55+</span>
+            <span class="audience-chip" data-audience="inclusive">♿ Inclusive</span>
+          </div>
+        </div>
+        
+        <button class="btn secondary" onclick="app.generatePromptPreview()" style="font-size:0.8rem; width:100%;" data-i18n="preview_btn">👁️ Preview Qwen Format</button>
+        <div id="promptPreview" class="prompt-doc-preview"></div>
+      </div>
+    </div>
+    
+    <!-- Style Reference Library -->
+    <div class="card" style="margin-top:12px;">
+      <h4 style="color:var(--prompt);">🎨 <span data-i18n="style_library">Style Reference Library</span></h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin:4px 0;" data-i18n="style_desc">Culturally relevant styles for library projects</p>
+      <div class="style-preview" id="styleLibrary">
+        <!-- Dynamically populated -->
+      </div>
+      <p style="font-size:0.75rem; color:var(--muted); margin-top:8px;" data-i18n="style_note">Click a style to auto-add to your prompt</p>
+    </div>
+    
+    <!-- Ethics Checklist -->
+    <div class="card" style="margin-top:12px;">
+      <h4 style="color:var(--prompt);">⚖️ <span data-i18n="ethics_checklist">Ethics Checklist</span></h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin:4px 0;" data-i18n="ethics_desc">Verify your generated image before use</p>
+      <div class="ethics-checklist" id="ethicsChecklist">
+        <!-- Dynamically populated -->
+      </div>
+      <button class="btn secondary" onclick="app.checkEthics()" style="font-size:0.8rem; margin-top:8px; width:100%;" data-i18n="check_ethics">✅ Verify Ethics</button>
+      <div id="ethicsResult" style="margin-top:8px; display:none; font-size:0.85rem;"></div>
+    </div>
+    
+    <!-- Prompt Documentation Generator -->
+    <div class="card" style="margin-top:12px;">
+      <h4 style="color:var(--prompt);">📝 <span data-i18n="doc_generator">Prompt Documentation</span></h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin:4px 0;" data-i18n="doc_desc">Generate a record for the open prompt library</p>
+      <div style="margin:12px 0;">
+        <input type="text" id="docTitle" placeholder="Title: e.g., 'Library Reading Corner Illustration'">
+        <input type="text" id="docTags" placeholder="Tags: e.g., library, children, watercolor, inclusive" style="margin-top:8px;">
+        <textarea id="docNotes" placeholder="Notes: purpose, audience, ethical considerations..." style="margin-top:8px; min-height:80px;"></textarea>
+      </div>
+      <button class="btn secondary" onclick="app.generateDoc()" style="font-size:0.8rem; width:100%;" data-i18n="generate_doc">📋 Generate Record</button>
+      <div id="docOutput" class="prompt-doc-preview"></div>
+    </div>
+  </section>
+
+  <!-- 📚 LIBRARY -->
+  <section id="library" class="tab-content">
+    <div class="card" style="text-align:center; border-color:var(--prompt);">
+      <h3 data-i18n="library_title">📚 Prompt Designer Specialist Library</h3>
+      <p style="font-size:0.85rem; color:var(--muted); margin-top:8px;" data-i18n="library_subtitle">Role documentation, ethics, workflows, resources</p>
+    </div>
+
+    <!-- 🔹 ROLE CARD: Промпт-дизайнер / Нейроиллюстратор -->
+    <div class="card library-section">
+      <h4>🎭 <span data-i18n="role_title">Prompt Designer / Neuroillustrator</span></h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;" data-i18n="role_subtitle">Bridge between AI technology and human meaning in visual culture</p>
+      
+      <div class="library-grid">
+        <div class="library-card">
+          <h5 data-i18n="role_mission">🔑 Key Mission</h5>
+          <p data-i18n="role_mission_desc">Create quality, ethical, accessible AI illustrations for library projects while teaching readers conscious prompt design and preserving human authorship.</p>
+        </div>
+        <div class="library-card">
+          <h5 data-i18n="role_responsibilities">🧩 Responsibilities</h5>
+          <ul>
+            <li data-i18n="resp1">Generate illustrations for library events, social campaigns, educational materials</li>
+            <li data-i18n="resp2">Design, test and document prompts with parameters, seeds, negative prompts</li>
+            <li data-i18n="resp3">Conduct workshops for readers (schoolchildren, students, adults, 55+)</li>
+            <li data-i18n="resp4">Filter content: check for correctness, plagiarism, cultural distortions</li>
+          </ul>
+        </div>
+        <div class="library-card">
+          <h5 data-i18n="role_tools">🛠️ Tools</h5>
+          <p data-i18n="tools_desc">Midjourney, SDXL, Kandinsky; Figma/GIMP for post-processing; Notion/Obsidian for prompt catalog; Upscayl for upscaling.</p>
+        </div>
+        <div class="library-card">
+          <h5 data-i18n="role_kpi">📊 KPIs</h5>
+          <ul>
+            <li data-i18n="kpi1">12+ approved illustrations used in library materials</li>
+            <li data-i18n="kpi2">20+ tested prompts in open catalog</li>
+            <li data-i18n="kpi3">1-2 public workshops conducted</li>
+            <li data-i18n="kpi4">0 ethical violations in published content</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHY LIBRARIES NEED PROMPT DESIGNERS -->
+    <div class="card library-section">
+      <h3 style="color:var(--prompt);" data-i18n="why_prompt_title">🎯 Why libraries need Prompt Designers</h3>
+      <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px;" data-i18n="why_prompt_desc">
+        Libraries are becoming digital cultural hubs. Prompt Designers ensure visual content is ethical, accessible, culturally relevant, and educational — not just generated.
+      </p>
+      <div class="pipeline-grid">
+        <div class="pipeline-card">
+          <h4>🎨 Visual Production</h4>
+          <p data-i18n="pipe1_desc">Creating illustrations for posters, booklets, social media, exhibitions</p>
+          <span class="fmt">qwen_prompt_record.md</span>
+        </div>
+        <div class="pipeline-card">
+          <h4>📚 Educational Content</h4>
+          <p data-i18n="pipe2_desc">Developing visual materials for workshops, guides, digital exhibitions</p>
+          <span class="fmt">qwen_educational_asset.json</span>
+        </div>
+        <div class="pipeline-card">
+          <h4>⚖️ Ethics Review</h4>
+          <p data-i18n="pipe3_desc">Checking AI art for bias, stereotypes, copyright compliance</p>
+          <span class="fmt">qwen_ethics_audit.csv</span>
+        </div>
+        <div class="pipeline-card">
+          <h4>🎓 Reader Education</h4>
+          <p data-i18n="pipe4_desc">Teaching conscious prompt design and critical AI literacy</p>
+          <span class="fmt">qwen_workshop_guide.pdf</span>
+        </div>
+        <div class="pipeline-card">
+          <h4>🗂️ Open Resources</h4>
+          <p data-i18n="pipe5_desc">Building public prompt libraries with documentation and examples</p>
+          <span class="fmt">qwen_prompt_catalog.json</span>
+        </div>
+      </div>
+      <div class="warning-box" style="margin-top:12px;">
+        <strong data-i18n="warning_title">💡 Important:</strong>
+        <span data-i18n="why_prompt_warning">Prompt Designers don't replace artists, but bridge technology and human meaning. They ensure AI art serves education, accessibility, and cultural preservation — not just aesthetics.</span>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="card library-section">
+      <h3 data-i18n="skills_section">🛠️ Graduate Skills</h3>
+      <div class="skills-grid">
+        <div class="skill-card">
+          <h4 data-i18n="hard_skills">🔹 Hard Skills</h4>
+          <ul>
+            <li data-i18n="hard1">Prompt engineering for 2-3 image generation models</li>
+            <li data-i18n="hard2">Style adaptation for cultural relevance and accessibility</li>
+            <li data-i18n="hard3">Ethics review: copyright, bias, stereotypes detection</li>
+            <li data-i18n="hard4">Post-processing: upscaling, compositing, design integration</li>
+            <li data-i18n="hard5">Documentation: prompt cataloging with metadata</li>
+          </ul>
+        </div>
+        <div class="skill-card">
+          <h4 data-i18n="soft_skills">🔹 Soft Skills</h4>
+          <ul>
+            <li data-i18n="soft1">Cultural sensitivity and inclusive design thinking</li>
+            <li data-i18n="soft2">Teaching complex concepts in simple language</li>
+            <li data-i18n="soft3">Collaboration with librarians, curators, volunteers</li>
+            <li data-i18n="soft4">Open-source mindset: sharing knowledge and prompts</li>
+            <li data-i18n="soft5">Ethical judgment in visual communication</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="card library-section">
+      <h3 data-i18n="jobs_title">💼 Where do Prompt Designers work?</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+        <span class="tag tag-qwen">🏛️ Public Libraries</span>
+        <span class="tag tag-qwen">🎓 Educational Institutions</span>
+        <span class="tag tag-qwen">🎨 Cultural Centers</span>
+        <span class="tag tag-qwen">📱 NGO Communications</span>
+        <span class="tag tag-qwen">♿ Inclusive Projects</span>
+        <span class="tag tag-qwen">🌍 Open Educational Resources</span>
+      </div>
+      <p style="font-size:0.85rem; color:var(--muted); margin-top:12px;" data-i18n="salary_info">Formats: Volunteer • Internship • Grant-funded • Part-time</p>
+    </div>
+  </section>
+
+  <!-- 📅 PROGRESS -->
+  <section id="progress" class="tab-content">
+    <div class="card">
+      <h3 data-i18n="progress_path">📈 Path to Prompt Designer Specialist</h3>
+      <ol style="padding-left:20px; color:var(--muted); line-height:1.8; font-size:0.82rem;">
+        <li><b>Days 1-3:</b> <span data-i18n="days1_3_desc">Role intro, AI models overview, prompt fundamentals</span></li>
+        <li><b>Days 4-6:</b> <span data-i18n="days4_6_desc">Style adaptation, ethics review, technical parameters</span></li>
+        <li><b>Days 7-8:</b> <span data-i18n="days7_8_desc">Post-processing, educational work, documentation</span></li>
+        <li><b>Day 9:</b> <span data-i18n="day9_desc">Portfolio in Qwen-compatible formats</span></li>
+        <li><b>Day 10:</b> <span data-i18n="day10_desc">FINAL EXAM (10/10)</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3 data-i18n="output_title">📦 Qwen Prompt Designer Reporting Formats</h3>
+      <div style="margin-top:8px;">
+        <div class="qwen-format">{"type": "qwen_prompt_record", "prompt": "...", "model": "sdxl", "style": "watercolor"}</div>
+        <div class="qwen-format">{"type": "qwen_ethics_audit", "image_id": "...", "flags": [], "approved": true}</div>
+        <div class="qwen-format">pipeline: qwen-prompt-designer-ethics | license: CC-BY-SA</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="support">
+    <h3 data-i18n="support_title">🤝 SUPPORT THE PROJECT 💙</h3>
+    <p data-i18n="support_desc">App is free. Always will be.<br>Support development:</p>
+    <div style="background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:6px; display:inline-block; margin:4px 0;">
+      <span id="phoneNum" style="color:var(--gold); font-weight:bold;">8-920-227-56-76</span>
+    </div>
+    <button class="btn secondary" style="margin-top:6px; font-size:0.8rem;" onclick="app.copyPhone()" data-i18n="copy_phone">📋 Copy</button>
+    <a href="https://ancf-hue.github.io/" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:bold; display:block; margin-top:4px;" data-i18n="catalog_link">🌟 Anti-AI Shield Catalog</a>
+  </section>
+
+  <footer data-i18n="footer">Anti-AI Qwen Academy | 100% Offline | Prompt Designer / Neuroillustrator</footer>
+</main>
+
+<!-- GUIDE MODAL -->
+<div id="guideModal" class="modal" onclick="if(event.target===this)app.closeModal('guideModal')">
+  <div class="modal-content">
+    <button class="modal-close" onclick="app.closeModal('guideModal')">✕</button>
+    <h2 style="color:var(--prompt); margin-bottom:12px;" data-i18n="guide_title">🚀 10-Day Plan</h2>
+    <ol style="padding-left:20px; color:var(--muted); line-height:1.8; font-size:0.85rem;">
+      <li><b>1:</b> <span>🧭 Intro: Prompt Designer role in library context</span></li>
+      <li><b>2:</b> <span>🤖 Understanding image generation models (Midjourney, SD, Kandinsky)</span></li>
+      <li><b>3:</b> <span>✍️ Prompt engineering fundamentals: structure, params, seed</span></li>
+      <li><b>4:</b> <span>🎨 Style adaptation: cultural code, accessibility, inclusion</span></li>
+      <li><b>5:</b> <span>⚖️ Ethics review: copyright, bias, stereotypes in AI art</span></li>
+      <li><b>6:</b> <span>🛠️ Technical skills: negative prompts, ControlNet, upscaling</span></li>
+      <li><b>7:</b> <span>✂️ Post-processing & integration with design tools</span></li>
+      <li><b>8:</b> <span>🎓 Educational work: teaching prompt design to readers</span></li>
+      <li><b>9:</b> <span>📁 Portfolio: documenting prompts in Qwen formats</span></li>
+      <li><b>10:</b> <span>🏆 FINAL EXAM (10/10) → QWEN-PROMPT-XXXXXX</span></li>
+    </ol>
+    <!-- ✅ Исправлено: добавлен data-i18n="guide_start" -->
+    <button class="btn" style="margin-top:16px; width:100%;" onclick="app.closeModal('guideModal')" data-i18n="guide_start">Let's go!</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ========== 🔐 CERTIFICATE UTILS (Unicode-safe) ==========
+  const CERT_SECRET = "qwen_prompt_designer_specialist_2026_secret";
+  
+  function generateCertSignature(id, issuer) {
+    const str = `${id}:${issuer}:${CERT_SECRET}`;
+    try {
+      return btoa(encodeURIComponent(str)).substring(0, 24);
+    } catch(e) {
+      return Array.from(str).map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join('').substring(0, 24);
+    }
+  }
+  
+  function verifyCertSignature(id, issuer, sig) {
+    if (!id || !issuer || !sig) return false;
+    return generateCertSignature(id, issuer) === sig;
+  }
+
+  // ========== 📦 PROMPT DESIGNER COURSE DATA ==========
+  const PROMPT_DESIGNER_COURSE = [
+    { 
+      day: 1, 
+      title: { ru: "🧭 Введение: роль промпт-дизайнера в библиотеке", en: "🧭 Intro: Prompt Designer in library context" },
+      content: { 
+        ru: "Промпт-дизайнер в библиотеке — не просто генератор картинок, а мост между технологией и человеческим смыслом. Вы создаёте визуальный контент, который просвещает, включает и уважает культурный код.",
+        en: "Prompt Designer in library is not just an image generator, but a bridge between technology and human meaning. You create visual content that educates, includes, and respects cultural code."
+      },
+      case: {
+        ru: "Пример: афиша детской выставки. ИИ сгенерировал изображение с однородной группой детей. Задача: адаптировать промпт для инклюзивного представления.",
+        en: "Example: poster for children's exhibition. AI generated image with homogeneous group of children. Task: adapt prompt for inclusive representation."
+      },
+      task: {
+        ru: "Назовите 3 принципа этичного промпт-дизайна для библиотечных проектов.",
+        en: "Name 3 principles of ethical prompt design for library projects."
+      },
+      check: (a) => (/инклюзив|включ|доступн|inclusive|access|bias|стереотип|stereotype|авторств|автор|copyright|лиценз|license|прозрачн|transparen/i.test(a)),
+      hint: {
+        ru: "1) Инклюзивность и репрезентация разнообразия 2) Прозрачность использования ИИ 3) Соблюдение авторских прав и лицензий",
+        en: "1) Inclusivity and diverse representation 2) Transparency about AI use 3) Respect for copyright and licenses"
+      },
+      qwenFormat: '{"type": "qwen_prompt_principles.md", "principles": ["inclusivity", "transparency", "copyright_compliance"]}'
+    },
+    { 
+      day: 2, 
+      title: { ru: "🤖 Понимание генеративных моделей для изображений", en: "🤖 Understanding image generation models" },
+      content: {
+        ru: "Разные модели имеют разные сильные стороны: Midjourney — художественные стили, SDXL — контроль через ControlNet, Kandinsky — русский язык и культурный контекст. Выбор модели зависит от задачи.",
+        en: "Different models have different strengths: Midjourney — artistic styles, SDXL — ControlNet control, Kandinsky — Russian language and cultural context. Model choice depends on the task."
+      },
+      case: {
+        ru: "Задача: иллюстрация для методички по краеведению. Midjourney дал красивый, но неточный архитектурный стиль. SDXL с ControlNet позволил загрузить референс здания.",
+        en: "Task: illustration for local history guide. Midjourney gave beautiful but inaccurate architectural style. SDXL with ControlNet allowed uploading building reference."
+      },
+      task: {
+        ru: "Для какой задачи вы бы выбрали Kandinsky, а для какой — Midjourney? Обоснуйте.",
+        en: "For which task would you choose Kandinsky, and for which — Midjourney? Justify."
+      },
+      check: (a) => (/kandinsky|midjourney|sd|stable.diffusion|модель|model|задач|task|культур|культурн|cultural|язык|language|русск|русский|русский.язык|reference|референс|контроль|controlnet/i.test(a)),
+      hint: {
+        ru: "Kandinsky: задачи на русском языке, локальный культурный контекст. Midjourney: высокохудожественные стили, международные проекты. SDXL: максимальный контроль через параметры и ControlNet.",
+        en: "Kandinsky: Russian-language tasks, local cultural context. Midjourney: high-art styles, international projects. SDXL: maximum control via parameters and ControlNet."
+      },
+      qwenFormat: '{"type": "qwen_model_selection.json", "criteria": ["language", "cultural_context", "control_needs", "artistic_style"]}'
+    },
+    { 
+      day: 3, 
+      title: { ru: "✍️ Основы промпт-инженерии: структура, параметры, seed", en: "✍️ Prompt engineering fundamentals: structure, params, seed" },
+      content: {
+        ru: "Хороший промпт имеет структуру: [объект] + [действие/контекст] + [стиль] + [параметры]. Seed фиксирует результат для воспроизводимости. Negative prompts исключают нежелательные элементы.",
+        en: "A good prompt has structure: [subject] + [action/context] + [style] + [parameters]. Seed fixes result for reproducibility. Negative prompts exclude unwanted elements."
+      },
+      case: {
+        ru: "Плохой промпт: 'книги'. Хороший: 'stack of vintage books on wooden table, warm library lighting, watercolor illustration style, soft colors, no text, no watermark --ar 4:3 --seed 12345'.",
+        en: "Bad prompt: 'books'. Good: 'stack of vintage books on wooden table, warm library lighting, watercolor illustration style, soft colors, no text, no watermark --ar 4:3 --seed 12345'."
+      },
+      task: {
+        ru: "Составьте промпт для иллюстрации 'тихий уголок для чтения в библиотеке'. Укажите стиль, параметры, negative prompts.",
+        en: "Craft a prompt for illustration 'quiet reading corner in library'. Specify style, parameters, negative prompts."
+      },
+      check: (a) => (/библиотек|library|чтен|read|уголок|corner|тих|quiet|стиль|style|параметр|param|aspect|ar|seed|negative|no.text|no.watermark|no.blur/i.test(a)),
+      hint: {
+        ru: "Структура: объект (reading corner) + контекст (library, quiet) + стиль (watercolor/illustration) + параметры (--ar 16:9) + negative (no people, no text, no blur).",
+        en: "Structure: subject (reading corner) + context (library, quiet) + style (watercolor/illustration) + parameters (--ar 16:9) + negative (no people, no text, no blur)."
+      },
+      qwenFormat: '{"type": "qwen_prompt_template.json", "structure": ["subject", "context", "style", "parameters", "negative_prompts"]}'
+    },
+    { 
+      day: 4, 
+      title: { ru: "🎨 Стиль, композиция, культурный код", en: "🎨 Style, composition, cultural code" },
+      content: {
+        ru: "Стиль должен соответствовать аудитории и цели: акварель для детских материалов, минимализм для инфографики, винтаж для краеведческих проектов. Учитывайте культурные символы и табу.",
+        en: "Style should match audience and purpose: watercolor for children's materials, minimalism for infographics, vintage for local history. Consider cultural symbols and taboos."
+      },
+      case: {
+        ru: "Проект: афиша выставки о местных писателях. Запрос: 'портрет писателя'. ИИ сгенерировал стереотипный образ. Решение: уточнить промпт с указанием этнической принадлежности, эпохи, стиля одежды.",
+        en: "Project: poster for local writers exhibition. Prompt: 'writer portrait'. AI generated stereotypical image. Solution: refine prompt with ethnicity, era, clothing style specifications."
+      },
+      task: {
+        ru: "Опишите, как адаптировать промпт 'библиотекарь за работой' для инклюзивной афиши.",
+        en: "Describe how to adapt prompt 'librarian at work' for inclusive poster."
+      },
+      check: (a) => (/инклюзив|inclusive|разнообраз|divers|разный|different|этнич|ethnic|возраст|age|инвалидн|disability|wheelchair|represent|репрезент|адапт|adapt|уточн|refine|specif/i.test(a)),
+      hint: {
+        ru: "Укажите: разнообразие (разный возраст, этническая принадлежность, наличие инвалидности), нейтральная обстановка, уважительный контекст. Пример: 'diverse librarians of different ages and backgrounds helping visitors, warm inclusive atmosphere, illustration style'.",
+        en: "Specify: diversity (different ages, ethnicities, disabilities), neutral setting, respectful context. Example: 'diverse librarians of different ages and backgrounds helping visitors, warm inclusive atmosphere, illustration style'."
+      },
+      qwenFormat: '{"type": "qwen_style_adaptation.json", "adaptations": ["diversity", "cultural_sensitivity", "accessibility"]}'
+    },
+    { 
+      day: 5, 
+      title: { ru: "⚖️ Этика: авторское право, bias, стереотипы", en: "⚖️ Ethics: copyright, bias, stereotypes in AI art" },
+      content: {
+        ru: "ИИ обучается на данных, которые могут содержать предвзятость. Проверяйте: репрезентация групп, культурные стереотипы, авторские права на стили. Всегда указывайте использование ИИ.",
+        en: "AI trains on data that may contain bias. Check: group representation, cultural stereotypes, copyright on styles. Always disclose AI use."
+      },
+      case: {
+        ru: "ИИ сгенерировал изображение 'учёный' как мужчина в лабораторном халате. Это гендерный стереотип. Решение: добавить в промпт 'female scientist' или 'diverse scientists'.",
+        en: "AI generated 'scientist' as man in lab coat. This is gender stereotype. Solution: add 'female scientist' or 'diverse scientists' to prompt."
+      },
+      task: {
+        ru: "Составьте чек-лист из 4 пунктов для проверки этичности сгенерированного изображения.",
+        en: "Create a 4-point checklist for checking ethics of generated image."
+      },
+      check: (a) => (/репрезент|represent|стереотип|stereotype|предвзят|bias|авторск|copyright|лиценз|license|раскрыв|disclose|ИИ|AI.use|проверк|check|этик|ethic/i.test(a)),
+      hint: {
+        ru: "Чек-лист: 1) Репрезентация разнообразия 2) Отсутствие культурных стереотипов 3) Проверка на плагиат стилей 4) Указание использования ИИ в финальном материале.",
+        en: "Checklist: 1) Diversity representation 2) No cultural stereotypes 3) Check for style plagiarism 4) Disclose AI use in final material."
+      },
+      qwenFormat: '{"type": "qwen_ethics_checklist.md", "items": ["diversity", "no_stereotypes", "copyright_check", "ai_disclosure"]}'
+    },
+    { 
+      day: 6, 
+      title: { ru: "🛠️ Технические навыки: negative prompts, ControlNet, upscaling", en: "🛠️ Technical skills: negative prompts, ControlNet, upscaling" },
+      content: {
+        ru: "Negative prompts исключают нежелательное: 'no text, no watermark, no blur'. ControlNet позволяет использовать референсы. Upscaling улучшает разрешение без потери качества.",
+        en: "Negative prompts exclude unwanted: 'no text, no watermark, no blur'. ControlNet allows using references. Upscaling improves resolution without quality loss."
+      },
+      case: {
+        ru: "Проблема: на сгенерированной иллюстрации появился текст-артефакт. Решение: добавить 'no text, no letters, no watermark' в negative prompts и перегенерировать.",
+        en: "Problem: generated illustration has text artifact. Solution: add 'no text, no letters, no watermark' to negative prompts and regenerate."
+      },
+      task: {
+        ru: "Составьте negative prompts для иллюстрации детской книги: что обязательно исключить?",
+        en: "Compose negative prompts for children's book illustration: what must be excluded?"
+      },
+      check: (a) => (/no.text|no.letters|no.watermark|no.blur|no.distort|no.violence|no.scary|no.adult|детск|children|книг|book|иллюстрац|illustration|исключ|exclude|negative/i.test(a)),
+      hint: {
+        ru: "Для детской книги: no text, no letters, no watermark, no violence, no scary elements, no adult themes, no blur, no distortion. Дополнительно: soft colors, friendly atmosphere.",
+        en: "For children's book: no text, no letters, no watermark, no violence, no scary elements, no adult themes, no blur, no distortion. Additionally: soft colors, friendly atmosphere."
+      },
+      qwenFormat: '{"type": "qwen_negative_prompts.json", "for": "children_book", "exclude": ["text", "watermark", "violence", "scary", "adult_themes"]}'
+    },
+    { 
+      day: 7, 
+      title: { ru: "✂️ Постобработка и интеграция с дизайн-инструментами", en: "✂️ Post-processing & integration with design tools" },
+      content: {
+        ru: "Сгенерированное изображение — черновик. Постобработка: кадрирование, цветокоррекция, добавление текста, композитинг. Интеграция с Figma/GIMP для финальной вёрстки.",
+        en: "Generated image is a draft. Post-processing: cropping, color correction, adding text, compositing. Integration with Figma/GIMP for final layout."
+      },
+      case: {
+        ru: "Иллюстрация для афиши: ИИ дал изображение, но нужно добавить название события, дату, логотип библиотеки. Решение: экспорт в PNG, импорт в Figma, вёрстка макета.",
+        en: "Poster illustration: AI gave image, but need to add event title, date, library logo. Solution: export to PNG, import to Figma, layout design."
+      },
+      task: {
+        ru: "Опишите пошаговый процесс: от промпта до готовой афиши в Figma.",
+        en: "Describe step-by-step process: from prompt to finished poster in Figma."
+      },
+      check: (a) => (/промпт|prompt|генераци|generat|экспорт|export|png|jpg|figma|gimp|photoshop|вёрст|layout|макет|mockup|текст|text|добавл|add|кадр|crop|цвет|color|коррекц|correct/i.test(a)),
+      hint: {
+        ru: "Шаги: 1) Промпт → генерация 2) Выбор лучшего варианта 3) Экспорт в PNG 4) Импорт в Figma 5) Добавление текста, логотипа 6) Проверка доступности (контраст, шрифт) 7) Экспорт финала.",
+        en: "Steps: 1) Prompt → generation 2) Select best variant 3) Export to PNG 4) Import to Figma 5) Add text, logo 6) Check accessibility (contrast, font) 7) Export final."
+      },
+      qwenFormat: '{"type": "qwen_workflow.md", "steps": ["prompt", "generate", "select", "export_png", "figma_layout", "accessibility_check", "final_export"]}'
+    },
+    { 
+      day: 8, 
+      title: { ru: "🎓 Образовательная работа: обучение других", en: "🎓 Educational work: teaching prompt design" },
+      content: {
+        ru: "Промпт-дизайнер в библиотеке — ещё и педагог. Создавайте простые гайды, проводите воркшопы, объясняйте сложные концепции доступно. Учитывайте разный уровень цифровой грамотности.",
+        en: "Prompt Designer in library is also an educator. Create simple guides, conduct workshops, explain complex concepts accessibly. Consider varying digital literacy levels."
+      },
+      case: {
+        ru: "Задача: провести мастер-класс для читателей 55+ по созданию открыток с ИИ. Решение: упрощённый интерфейс, пошаговая инструкция на бумаге, помощь волонтёров.",
+        en: "Task: conduct workshop for 55+ readers on creating AI greeting cards. Solution: simplified interface, step-by-step paper instructions, volunteer assistance."
+      },
+      task: {
+        ru: "Составьте план 30-минутного мини-гайда 'Первый промпт для новичка'.",
+        en: "Create a plan for 30-minute mini-guide 'First prompt for beginner'."
+      },
+      check: (a) => (/гайд|guide|план|plan|новичк|beginner|прост|simple|пошаг|step.by.step|инструкц|instruction|помощ|help|волонтёр|volunteer|доступн|access/i.test(a)),
+      hint: {
+        ru: "Структура гайда: 1) Что такое промпт (2 мин) 2) Простой пример (5 мин) 3) Практика: составь свой (15 мин) 4) Проверка и советы (5 мин) 5) Ресурсы для дальнейшего изучения (3 мин).",
+        en: "Guide structure: 1) What is a prompt (2 min) 2) Simple example (5 min) 3) Practice: create yours (15 min) 4) Check and tips (5 min) 5) Resources for further learning (3 min)."
+      },
+      qwenFormat: '{"type": "qwen_workshop_guide.json", "duration": "30min", "audience": "beginners", "structure": ["intro", "example", "practice", "tips", "resources"]}'
+    },
+    { 
+      day: 9, 
+      title: { ru: "📁 Портфолио: документирование промптов и результатов", en: "📁 Portfolio: documenting prompts and results" },
+      content: {
+        ru: "Документирование критично для воспроизводимости и обучения других. Записывайте: промпт, модель, параметры, seed, negative prompts, этические заметки, финальное использование.",
+        en: "Documentation is critical for reproducibility and teaching others. Record: prompt, model, parameters, seed, negative prompts, ethics notes, final use."
+      },
+      case: {
+        ru: "Ваша запись в библиотеке промптов должна содержать: title, prompt, model, parameters, seed, negative_prompts, style_reference, ethics_notes, usage_context, license.",
+        en: "Your prompt library record should contain: title, prompt, model, parameters, seed, negative_prompts, style_reference, ethics_notes, usage_context, license."
+      },
+      task: {
+        ru: "Создайте шаблон записи для библиотеки промптов: какие поля обязательны, какие опциональны?",
+        en: "Create a template for prompt library record: which fields are mandatory, which optional?"
+      },
+      check: (a) => (/title|заголовок|prompt|модель|model|параметр|param|seed|negative|этик|ethic|использован|usage|лиценз|license|обязательн|mandatory|опциональн|optional/i.test(a)),
+      hint: {
+        ru: "Обязательные: title, prompt, model, license. Опциональные: parameters, seed, negative_prompts, style_reference, ethics_notes, usage_context, author_notes.",
+        en: "Mandatory: title, prompt, model, license. Optional: parameters, seed, negative_prompts, style_reference, ethics_notes, usage_context, author_notes."
+      },
+      qwenFormat: '{"type": "qwen_prompt_record.json", "mandatory": ["title","prompt","model","license"], "optional": ["parameters","seed","negative_prompts","ethics_notes","usage_context"]}'
+    },
+    { 
+      day: 10, 
+      title: { ru: "🏆 ФИНАЛЬНЫЙ ЭКЗАМЕН", en: "🏆 FINAL EXAM" }, 
+      content: { 
+        ru: "Проверка всех навыков Промпт-дизайнера. Нужно 10 из 10 для доступа к Library Contributor Pipeline.", 
+        en: "Testing all Prompt Designer skills. Need 10 out of 10 for Library Contributor Pipeline access." 
+      }, 
+      isExam: true,
+      examQuestions: [
+        { q: { ru: "Промпт-дизайнер должен скрывать использование ИИ в финальных материалах.", en: "Prompt Designer should hide AI use in final materials." }, correct: false, expl: { ru: "Прозрачность — ключевой принцип: всегда указывайте использование ИИ.", en: "Transparency is key: always disclose AI use." } },
+        { q: { ru: "Seed в промпте фиксирует результат для воспроизводимости.", en: "Seed in prompt fixes result for reproducibility." }, correct: true, expl: { ru: "Seed позволяет воссоздать тот же результат при тех же параметрах.", en: "Seed allows recreating same result with same parameters." } },
+        { q: { ru: "Negative prompts помогают исключить нежелательные элементы из генерации.", en: "Negative prompts help exclude unwanted elements from generation." }, correct: true, expl: { ru: "Пример: 'no text, no watermark, no blur' улучшает качество результата.", en: "Example: 'no text, no watermark, no blur' improves result quality." } },
+        { q: { ru: "Стиль иллюстрации не влияет на восприятие аудиторией.", en: "Illustration style doesn't affect audience perception." }, correct: false, expl: { ru: "Стиль критичен: акварель для детей, минимализм для инфографики и т.д.", en: "Style is critical: watercolor for children, minimalism for infographics, etc." } },
+        { q: { ru: "ИИ-модели могут воспроизводить предвзятость из обучающих данных.", en: "AI models can reproduce bias from training data." }, correct: true, expl: { ru: "Проверка на стереотипы и репрезентацию — обязанность промпт-дизайнера.", en: "Checking for stereotypes and representation is Prompt Designer's duty." } },
+        { q: { ru: "ControlNet позволяет использовать референсные изображения для контроля композиции.", en: "ControlNet allows using reference images for composition control." }, correct: true, expl: { ru: "ControlNet — мощный инструмент для точного контроля результата.", en: "ControlNet is powerful tool for precise result control." } },
+        { q: { ru: "Документирование промптов нужно только для личного использования.", en: "Prompt documentation is only needed for personal use." }, correct: false, expl: { ru: "Документирование критично для воспроизводимости, обучения и открытости.", en: "Documentation is critical for reproducibility, teaching, and openness." } },
+        { q: { ru: "Адаптация промпта под аудиторию 55+ требует упрощения интерфейса и инструкций.", en: "Adapting prompt for 55+ audience requires simplifying interface and instructions." }, correct: true, expl: { ru: "Доступность — ключевой принцип инклюзивного дизайна.", en: "Accessibility is key principle of inclusive design." } },
+        { q: { ru: "Лицензия CC-BY-SA позволяет свободное использование с указанием автора.", en: "CC-BY-SA license allows free use with attribution." }, correct: true, expl: { ru: "CC-BY-SA — популярная лицензия для открытых образовательных ресурсов.", en: "CC-BY-SA is popular license for open educational resources." } },
+        { q: { ru: "Промпт-дизайнер не влияет на этичность визуального контента.", en: "Prompt Designer doesn't affect ethics of visual content." }, correct: false, expl: { ru: "Промпт-дизайнер напрямую влияет на репрезентацию, инклюзивность и этичность через промпты.", en: "Prompt Designer directly affects representation, inclusivity, and ethics through prompts." } }
+      ]
+    }
+  ];
+
+  // ========== 🛠️ TOOLS DATA ==========
+  const STYLE_LIBRARY = [
+    { id: "watercolor", name: { ru: "Акварель", en: "Watercolor" }, desc: { ru: "Мягкие цвета, текучие формы — для детских материалов", en: "Soft colors, fluid shapes — for children's materials" } },
+    { id: "minimal", name: { ru: "Минимализм", en: "Minimalism" }, desc: { ru: "Чистые линии, много воздуха — для инфографики", en: "Clean lines, ample whitespace — for infographics" } },
+    { id: "vintage", name: { ru: "Винтаж", en: "Vintage" }, desc: { ru: "Ретро-стиль, сепия — для краеведческих проектов", en: "Retro style, sepia tones — for local history projects" } },
+    { id: "illustration", name: { ru: "Иллюстрация", en: "Illustration" }, desc: { ru: "Универсальный стиль для образовательных материалов", en: "Universal style for educational materials" } },
+    { id: "photorealistic", name: { ru: "Фотореализм", en: "Photorealistic" }, desc: { ru: "Максимальная детализация — для документальных проектов", en: "Maximum detail — for documentary projects" } }
+  ];
+
+  const ETHICS_CHECKLIST = [
+    { id: "diversity", text: { ru: "Изображение репрезентирует разнообразие (возраст, этнос, способности)", en: "Image represents diversity (age, ethnicity, abilities)" }, warning: false },
+    { id: "stereotypes", text: { ru: "Отсутствуют культурные/гендерные стереотипы", en: "No cultural/gender stereotypes present" }, warning: true },
+    { id: "copyright", text: { ru: "Стиль не копирует защищённые авторским правом работы", en: "Style doesn't copy copyrighted works" }, warning: true },
+    { id: "disclosure", text: { ru: "Использование ИИ будет указано в финальном материале", en: "AI use will be disclosed in final material" }, warning: false },
+    { id: "accessibility", text: { ru: "Изображение доступно для восприятия (контраст, читаемость)", en: "Image is accessible (contrast, readability)" }, warning: false },
+    { id: "context", text: { ru: "Контекст использования уважителен и соответствует цели", en: "Usage context is respectful and purpose-aligned" }, warning: true }
+  ];
+
+  // ========== 🌐 i18n ==========
+  const i18n = {
+    ru: {
+      hero_subtitle: "Библиотечный хаб • 100% Offline • 10 дней • Этичный ИИ-арт",
+      qwen_title: "Anti-AI Qwen Academy: Промпт-дизайнер",
+      guide_btn: "План 10 дней",
+      guide_start: "Начинаю!", // ✅ Добавлено
+      concept1: "✍️ Основы промптов", concept2: "🎨 Адаптация стиля", concept3: "⚖️ Этика", concept4: "🛠️ Тех. параметры", concept5: "🎓 Обучение других", concept6: "📁 Портфолио",
+      tab_course: "🎓 Обучение", tab_tools: "🛠️ Инструменты", tab_library: "📚 Библиотека", tab_progress: "📅 Прогресс",
+      cert_conditions: "🏆 УСЛОВИЯ СЕРТИФИКАТА",
+      cond1_sub: "Промпт-дизайн + форматы Qwen", cond2_sub: "Без ошибок", cond3: "Портфолио", cond3_sub: "5 кейсов в форматах Qwen",
+      cert_warning: "⚠️ Идеальный результат → доступ к Library Contributor",
+      progress_title: "📊 Прогресс", lessons_done: "Уроков пройдено",
+      reset_btn: "🔄 Сбросить", reset_warning: "⚠️ Все данные будут удалены",
+      cert_heading: "🎓 СЕРТИФИКАТ", cert_course: "Курс: ",
+      cert_confirms: "Настоящим подтверждается, что",
+      cert_who: "Сертифицированный Промпт-дизайнер / Нейроиллюстратор",
+      cert_completed: "успешно завершил курс этичного создания ИИ-арта для библиотечных и образовательных проектов",
+      cert_issuer: "Issuer:", cert_pipeline: "Pipeline:", cert_compliance: "Compliance:", cert_date_label: "Дата:",
+      cert_download: "💾 JSON", cert_qwen_export: "📤 Qwen Format", cert_print: "🖨️ Print",
+      cert_badge: "Qwen Prompt Designer Specialist", cert_practice: "🛠️ Инструменты",
+      cert_validate_title: "🔍 Проверка сертификата", cert_validate_btn: "✅ Check",
+      cert_security: "🔒 Offline • SHA-256 • Qwen-compatible • CC-BY-SA",
+      tools_title: "🛠️ Инструменты Промпт-дизайнера", tools_subtitle: "Интерактивные инструменты для практики этичного промпт-дизайна",
+      prompt_builder: "Конструктор промптов", prompt_desc: "Создавайте эффективные, этичные промпты для генерации изображений",
+      negative_prompts: "Negative Prompts (что исключить):",
+      audience_adapter: "Целевая аудитория:",
+      preview_btn: "👁️ Предпросмотр формата Qwen",
+      style_library: "Библиотека стилей", style_desc: "Культурно-релевантные стили для библиотечных проектов",
+      style_note: "Нажмите на стиль, чтобы добавить в промпт",
+      ethics_checklist: "Чек-лист этичности", ethics_desc: "Проверьте сгенерированное изображение перед использованием",
+      check_ethics: "✅ Проверить этичность",
+      doc_generator: "Документирование промпта", doc_desc: "Сформируйте запись для открытой библиотеки промптов",
+      generate_doc: "📋 Сформировать запись",
+      library_title: "📚 Библиотека Промпт-дизайнера", library_subtitle: "Документация роли, этика, рабочие процессы, ресурсы",
+      role_title: "Промпт-дизайнер / Нейроиллюстратор", role_subtitle: "Мост между технологией ИИ и человеческим смыслом в визуальной культуре",
+      role_mission: "🔑 Ключевая миссия", role_mission_desc: "Создавать качественные, этичные, доступные ИИ-иллюстрации для библиотечных проектов, обучая читателей осознанному промпт-дизайну и сохраняя человеческое авторство.",
+      role_responsibilities: "🧩 Зоны ответственности", resp1: "Генерация иллюстраций для афиш, буклетов, соцсетей, выставок", resp2: "Разработка, тестирование и документирование промптов с параметрами", resp3: "Проведение мастер-классов для читателей (школьники, взрослые, 55+)", resp4: "Фильтрация контента: проверка на корректность, плагиат, культурные искажения",
+      role_tools: "🛠️ Инструментарий", tools_desc: "Midjourney, SDXL, Kandinsky; Figma/GIMP для постобработки; Notion/Obsidian для каталога промптов; Upscayl для апскейлинга.",
+      role_kpi: "📊 Метрики эффективности", kpi1: "12+ утверждённых иллюстраций, использованных в материалах", kpi2: "20+ протестированных промптов в открытом каталоге", kpi3: "1-2 проведённых публичных мастер-класса", kpi4: "0 этических нарушений в опубликованном контенте",
+      why_prompt_title: "🎯 Почему библиотекам нужны Промпт-дизайнеры",
+      why_prompt_desc: "Библиотеки становятся цифровыми культурными хабами. Промпт-дизайнеры обеспечивают этичность, доступность, культурную релевантность и образовательную ценность визуального контента — а не просто эстетику.",
+      pipe1_desc: "Создание иллюстраций для афиш, буклетов, соцсетей, выставок",
+      pipe2_desc: "Разработка визуальных материалов для воркшопов, гайдов, цифровых выставок",
+      pipe3_desc: "Проверка ИИ-арта на предвзятость, стереотипы, соответствие авторскому праву",
+      pipe4_desc: "Обучение читателей осознанному промпт-дизайну и критической ИИ-грамотности",
+      pipe5_desc: "Создание открытых библиотек промптов с документацией и примерами",
+      warning_title: "💡 Важно:",
+      why_prompt_warning: "Промпт-дизайнеры не заменяют художников, а соединяют технологию и человеческий смысл. Они обеспечивают, чтобы ИИ-арт служил просвещению, доступности и сохранению культуры — а не только эстетике.",
+      skills_section: "🛠️ Навыки выпускника",
+      hard_skills: "🔹 Hard Skills", soft_skills: "🔹 Soft Skills",
+      hard1: "Промпт-инженерия для 2-3 моделей генерации изображений", hard2: "Адаптация стиля под культурную релевантность и доступность",
+      hard3: "Этическая экспертиза: выявление предвзятости, стереотипов, проверка авторских прав", hard4: "Постобработка: апскейлинг, композитинг, интеграция с дизайн-инструментами",
+      hard5: "Документирование: каталогизация промптов с метаданными",
+      soft1: "Культурная чувствительность и инклюзивное дизайн-мышление", soft2: "Объяснение сложных концепций простым языком",
+      soft3: "Коллаборация с библиотекарями, кураторами, волонтёрами", soft4: "Open-source мышление: обмен знаниями и промптами",
+      soft5: "Этическое суждение в визуальной коммуникации",
+      jobs_title: "💼 Где работают Промпт-дизайнеры?",
+      salary_info: "Форматы: Волонтёрство • Стажировка • Грант • Частичная занятость",
+      progress_path: "📈 Путь к Промпт-дизайнеру",
+      days1_3_desc: "Введение в роль, обзор ИИ-моделей, основы промпт-инженерии",
+      days4_6_desc: "Адаптация стиля, этическая экспертиза, технические параметры",
+      days7_8_desc: "Постобработка, образовательная работа, документирование",
+      day9_desc: "Портфолио в форматах Qwen",
+      day10_desc: "ФИНАЛЬНЫЙ ЭКЗАМЕН (10/10)",
+      output_title: "📦 Форматы отчётности Промпт-дизайнера",
+      support_title: "🤝 ПОДДЕРЖАТЬ ПРОЕКТ 💙", support_desc: "Приложение бесплатное. Было и останется.<br>Поддержка разработки:",
+      copy_phone: "📋 Copy", catalog_link: "🌟 Каталог Anti-AI Shield",
+      footer: "Anti-AI Qwen Academy | 100% Offline | Prompt Designer / Neuroillustrator",
+      guide_title: "🚀 План 10 дней",
+      cert_valid: "✅ Сертификат действителен", cert_invalid: "❌ Сертификат не найден",
+      voice_on: "Озвучка включена", voice_off: "Озвучка выключена", lang_changed: "Язык изменён",
+      progress_reset: "Прогресс сброшен", cert_downloaded: "Сертификат скачан", portfolio_downloaded: "Qwen Portfolio скачано",
+      print_cert: "Печать...", copied: "Скопировано",
+      too_short: "⚠️ Слишком кратко! Минимум 10 символов.",
+      correct: "✅ Верно! Урок завершён!", incorrect: "❌ Не совсем так. Изучите подсказку.",
+      exam_perfect: "🎉 ИДЕАЛЬНО! 10 из 10", exam_failed: "😔 Не сдано. {score}/10. Нужно 10.",
+      cert_locked: "Сначала получите сертификат (10/10).", cert_imported: "✅ Сертификат загружен!",
+      cert_bad_sig: "❌ Неверная подпись.", cert_file_error: "❌ Ошибка файла.",
+      reset_confirm: "⚠️ Сбросить весь прогресс?", reset_done: "✅ Сброшено!",
+      day_label: "День", task_label: "Задание", answer_placeholder: "Ваш ответ...",
+      check_btn: "Проверить", hint_btn: "Подсказка", answer_btn: "Ответ",
+      locked_msg: "Пройдите предыдущий урок", final_exam: "ФИНАЛЬНЫЙ ЭКЗАМЕН",
+      exam_instr: "10 вопросов. Нужно <b>10 правильных</b> для доступа к Library Contributor Pipeline.",
+      question: "Вопрос", true_opt: "Верно", false_opt: "Неверно",
+      submit_exam: "Сдать экзамен", out_of: "из", cert_unlocked: "Доступ к Library Contributor разблокирован ↓",
+      retry_btn: "Ещё раз", too_short_practice: "Слишком кратко",
+      practice_correct: "Верно! Вы нашли ключевую проблему.",
+      practice_incorrect: "Попробуйте ещё раз. Ищите этические риски, стереотипы или технические ошибки.",
+      invalid_format: "Неверный формат (QWEN-PROMPT-XXXXXX)", issued_label: "Выдан"
+    },
+    en: {
+      hero_subtitle: "Library Hub • 100% Offline • 10 days • Ethical AI Art",
+      qwen_title: "Anti-AI Qwen Academy: Prompt Designer",
+      guide_btn: "10-Day Plan",
+      guide_start: "Let's go!", // ✅ Added
+      concept1: "✍️ Prompt Basics", concept2: "🎨 Style Adapt", concept3: "⚖️ Ethics", concept4: "🛠️ Tech Params", concept5: "🎓 Teach Others", concept6: "📁 Portfolio",
+      tab_course: "🎓 Course", tab_tools: "🛠️ Tools", tab_library: "📚 Library", tab_progress: "📅 Progress",
+      cert_conditions: "🏆 CERTIFICATE REQUIREMENTS",
+      cond1_sub: "Prompt Design + Qwen formats", cond2_sub: "No mistakes", cond3: "Portfolio", cond3_sub: "5 cases in Qwen formats",
+      cert_warning: "⚠️ Perfect results → Library Contributor access",
+      progress_title: "📊 Progress", lessons_done: "Lessons completed",
+      reset_btn: "🔄 Reset", reset_warning: "⚠️ All data will be deleted",
+      cert_heading: "🎓 CERTIFICATE", cert_course: "Course: ",
+      cert_confirms: "This certifies that",
+      cert_who: "Certified Prompt Designer / Neuroillustrator Specialist",
+      cert_completed: "has successfully completed the ethical AI art creation course for library and educational projects",
+      cert_issuer: "Issuer:", cert_pipeline: "Pipeline:", cert_compliance: "Compliance:", cert_date_label: "Date:",
+      cert_download: "💾 JSON", cert_qwen_export: "📤 Qwen Format", cert_print: "🖨️ Print",
+      cert_badge: "Qwen Prompt Designer Specialist", cert_practice: "🛠️ Tools",
+      cert_validate_title: "🔍 Verify Certificate", cert_validate_btn: "✅ Check",
+      cert_security: "🔒 Offline • SHA-256 • Qwen-compatible • CC-BY-SA",
+      tools_title: "🛠️ Prompt Designer Toolkit", tools_subtitle: "Interactive tools for ethical prompt design practice",
+      prompt_builder: "Prompt Builder", prompt_desc: "Craft effective, ethical prompts for image generation",
+      negative_prompts: "Negative Prompts (what to avoid):",
+      audience_adapter: "Target Audience:",
+      preview_btn: "👁️ Preview Qwen Format",
+      style_library: "Style Reference Library", style_desc: "Culturally relevant styles for library projects",
+      style_note: "Click a style to auto-add to your prompt",
+      ethics_checklist: "Ethics Checklist", ethics_desc: "Verify your generated image before use",
+      check_ethics: "✅ Verify Ethics",
+      doc_generator: "Prompt Documentation", doc_desc: "Generate a record for the open prompt library",
+      generate_doc: "📋 Generate Record",
+      library_title: "📚 Prompt Designer Specialist Library", library_subtitle: "Role documentation, ethics, workflows, resources",
+      role_title: "Prompt Designer / Neuroillustrator", role_subtitle: "Bridge between AI technology and human meaning in visual culture",
+      role_mission: "🔑 Key Mission", role_mission_desc: "Create quality, ethical, accessible AI illustrations for library projects while teaching readers conscious prompt design and preserving human authorship.",
+      role_responsibilities: "🧩 Responsibilities", resp1: "Generate illustrations for posters, booklets, social media, exhibitions", resp2: "Design, test and document prompts with parameters, seeds, negative prompts", resp3: "Conduct workshops for readers (schoolchildren, adults, 55+)", resp4: "Filter content: check for correctness, plagiarism, cultural distortions",
+      role_tools: "🛠️ Tools", tools_desc: "Midjourney, SDXL, Kandinsky; Figma/GIMP for post-processing; Notion/Obsidian for prompt catalog; Upscayl for upscaling.",
+      role_kpi: "📊 KPIs", kpi1: "12+ approved illustrations used in library materials", kpi2: "20+ tested prompts in open catalog", kpi3: "1-2 public workshops conducted", kpi4: "0 ethical violations in published content",
+      why_prompt_title: "🎯 Why libraries need Prompt Designers",
+      why_prompt_desc: "Libraries are becoming digital cultural hubs. Prompt Designers ensure visual content is ethical, accessible, culturally relevant, and educational — not just generated.",
+      pipe1_desc: "Creating illustrations for posters, booklets, social media, exhibitions",
+      pipe2_desc: "Developing visual materials for workshops, guides, digital exhibitions",
+      pipe3_desc: "Checking AI art for bias, stereotypes, copyright compliance",
+      pipe4_desc: "Teaching conscious prompt design and critical AI literacy to readers",
+      pipe5_desc: "Building public prompt libraries with documentation and examples",
+      warning_title: "💡 Important:",
+      why_prompt_warning: "Prompt Designers don't replace artists, but bridge technology and human meaning. They ensure AI art serves education, accessibility, and cultural preservation — not just aesthetics.",
+      skills_section: "🛠️ Graduate Skills",
+      hard_skills: "🔹 Hard Skills", soft_skills: "🔹 Soft Skills",
+      hard1: "Prompt engineering for 2-3 image generation models", hard2: "Style adaptation for cultural relevance and accessibility",
+      hard3: "Ethics review: bias, stereotypes, copyright compliance detection", hard4: "Post-processing: upscaling, compositing, design tool integration",
+      hard5: "Documentation: prompt cataloging with metadata",
+      soft1: "Cultural sensitivity and inclusive design thinking", soft2: "Explaining complex concepts in simple language",
+      soft3: "Collaboration with librarians, curators, volunteers", soft4: "Open-source mindset: sharing knowledge and prompts",
+      soft5: "Ethical judgment in visual communication",
+      jobs_title: "💼 Where do Prompt Designers work?",
+      salary_info: "Formats: Volunteer • Internship • Grant-funded • Part-time",
+      progress_path: "📈 Path to Prompt Designer Specialist",
+      days1_3_desc: "Role intro, AI models overview, prompt fundamentals",
+      days4_6_desc: "Style adaptation, ethics review, technical parameters",
+      days7_8_desc: "Post-processing, educational work, documentation",
+      day9_desc: "Portfolio in Qwen-compatible formats",
+      day10_desc: "FINAL EXAM (10/10)",
+      output_title: "📦 Qwen Prompt Designer Reporting Formats",
+      support_title: "🤝 SUPPORT THE PROJECT 💙", support_desc: "App is free. Always will be.<br>Support development:",
+      copy_phone: "📋 Copy", catalog_link: "🌟 Anti-AI Shield Catalog",
+      footer: "Anti-AI Qwen Academy | 100% Offline | Prompt Designer / Neuroillustrator",
+      guide_title: "🚀 10-Day Plan",
+      cert_valid: "✅ Certificate is valid", cert_invalid: "❌ Certificate not found",
+      voice_on: "Voice enabled", voice_off: "Voice disabled", lang_changed: "Language changed",
+      progress_reset: "Progress reset", cert_downloaded: "Certificate downloaded", portfolio_downloaded: "Qwen Portfolio downloaded",
+      print_cert: "Printing...", copied: "Copied",
+      too_short: "⚠️ Too short! Minimum 10 characters.",
+      correct: "✅ Correct! Lesson completed!", incorrect: "❌ Not quite. Check the hint.",
+      exam_perfect: "🎉 PERFECT! 10 out of 10", exam_failed: "😔 Not passed. {score}/10. Need 10.",
+      cert_locked: "Get certificate first (10/10).", cert_imported: "✅ Certificate imported!",
+      cert_bad_sig: "❌ Invalid signature.", cert_file_error: "❌ File error.",
+      reset_confirm: "⚠️ Reset all progress?", reset_done: "✅ Reset!",
+      day_label: "Day", task_label: "Task", answer_placeholder: "Your answer...",
+      check_btn: "Check", hint_btn: "Hint", answer_btn: "Answer",
+      locked_msg: "Complete previous lesson first", final_exam: "FINAL EXAM",
+      exam_instr: "10 questions. Need <b>10 correct</b> for Library Contributor Pipeline access.",
+      question: "Question", true_opt: "True", false_opt: "False",
+      submit_exam: "Submit Exam", out_of: "out of", cert_unlocked: "Library Contributor access unlocked ↓",
+      retry_btn: "Try again", too_short_practice: "Too short",
+      practice_correct: "Correct! You found the key issue.",
+      practice_incorrect: "Try again. Look for ethical risks, stereotypes, or technical errors.",
+      invalid_format: "Invalid format (QWEN-PROMPT-XXXXXX)", issued_label: "Issued"
+    }
+  };
+
+  // ========== 🧠 STATE ==========
+  let currentLang = localStorage.getItem('qwen_pd_lang') || 'ru';
+  let courseProgress = (() => { try { const s = JSON.parse(localStorage.getItem('qwen_pd_progress')); return Array.isArray(s) && s.length === 10 ? s : Array(10).fill(false); } catch(e) { return Array(10).fill(false); } })();
+  let examScore = parseInt(localStorage.getItem('qwen_pd_exam')) || 0;
+  let certData = JSON.parse(localStorage.getItem('qwen_pd_certificate')) || null;
+  let voiceEnabled = localStorage.getItem('qwen_pd_voice') === 'true';
+  
+  const synth = window.speechSynthesis;
+  let voices = [], currentVoice = null, lastSpeakTime = 0, voicesLoaded = false, voiceRetryCount = 0;
+
+  function saveState() {
+    try {
+      localStorage.setItem('qwen_pd_lang', currentLang);
+      localStorage.setItem('qwen_pd_progress', JSON.stringify(courseProgress));
+      localStorage.setItem('qwen_pd_exam', examScore.toString());
+      localStorage.setItem('qwen_pd_certificate', JSON.stringify(certData));
+      localStorage.setItem('qwen_pd_voice', voiceEnabled.toString());
+    } catch(e) { console.warn('Storage save failed:', e); }
+  }
+
+  // ========== 🔊 SPEECH SYNTHESIS ==========
+  function isSpeechSupported() { 
+    return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  }
+  
+  function loadVoicesWithRetry() {
+    if (!isSpeechSupported() || !synth) return;
+    try {
+      voices = synth.getVoices();
+      if (voices.length > 0) { voicesLoaded = true; selectVoice(); } 
+      else if (voiceRetryCount < 5) { voiceRetryCount++; setTimeout(loadVoicesWithRetry, 500 * voiceRetryCount); }
+    } catch(e) { console.warn('Voice load error:', e); }
+  }
+  
+  function selectVoice() { 
+    if (!voices.length) return;
+    const p = currentLang === 'ru' ? 'ru' : 'en'; 
+    currentVoice = voices.find(v => v.lang === `${p}-${p.toUpperCase()}`) || voices.find(v => v.lang.startsWith(p)) || voices.find(v => v.default) || voices[0]; 
+  }
+  
+  if (synth?.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = () => { voices = synth.getVoices(); if (voices.length > 0) { voicesLoaded = true; selectVoice(); } };
+  }
+  loadVoicesWithRetry();
+  setTimeout(loadVoicesWithRetry, 1000);
+  setTimeout(loadVoicesWithRetry, 3000);
+
+  // ✅ Добавлена функция остановки речи
+  function stopSpeaking() {
+    if (synth && synth.speaking) {
+      try { synth.cancel(); } catch(e) { console.warn('Stop speaking error:', e); }
+    }
+  }
+
+  function speak(text, priority = false) {
+    if (!voiceEnabled || !isSpeechSupported() || !text) return;
+    if (!voicesLoaded && synth) { const v = synth.getVoices(); if (v.length > 0) { voices = v; voicesLoaded = true; selectVoice(); } }
+    if (!voicesLoaded) return;
+    const now = Date.now(); if (now - lastSpeakTime < 800 && !priority) return; lastSpeakTime = now;
+    if (priority && synth) { stopSpeaking(); } // ✅ Используем stopSpeaking()
+    try { 
+      const u = new SpeechSynthesisUtterance(text); 
+      if (currentVoice) u.voice = currentVoice;
+      u.rate = 0.95; u.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US';
+      u.onerror = (e) => {
+        console.warn('Speech error:', e.error);
+        if (e.error === 'voice-unavailable' && voiceRetryCount < 3) {
+          voiceRetryCount++;
+          setTimeout(() => loadVoicesWithRetry(), 1000);
+        }
+      };
+      if (synth) synth.speak(u); 
+    } catch(e) { console.warn('Speech speak error:', e); }
+  }
+  
+  function updateVoiceBtn() { const btn = document.getElementById('voiceBtn'); if (btn) { btn.textContent = voiceEnabled ? '🔊' : '🔇'; btn.classList.toggle('active', voiceEnabled); btn.setAttribute('aria-pressed', voiceEnabled); } }
+
+  // ========== 🎨 APP ==========
+  const app = {
+    t: function(key, params = {}) { let text = i18n[currentLang]?.[key] || i18n.ru[key] || key; Object.keys(params).forEach(p => text = text.replace(`{${p}}`, params[p])); return text; },
+    getBilingual: function(content) { if (typeof content === 'object' && content.ru && content.en) { return content[currentLang] || content.ru; } return content; },
+    
+    applyLang: function() {
+      document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (key && this.t(key)) el.textContent = this.t(key); });
+      document.getElementById('langBtn').textContent = currentLang === 'ru' ? '🌐 EN' : '🌐 RU';
+      const tm = { course: 'tab_course', tools: 'tab_tools', library: 'tab_library', progress: 'tab_progress' };
+      document.querySelectorAll('.tab-btn').forEach(b => { const k = tm[b.dataset.tab]; if (k && this.t(k)) b.textContent = this.t(k); });
+      updateVoiceBtn(); this.renderCourse(); this.renderTools(); speak(this.t('lang_changed'), true);
+    },
+    
+    toggleLang: function() { currentLang = currentLang === 'ru' ? 'en' : 'ru'; saveState(); this.applyLang(); },
+    switchTab: function(id) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelector(`.tab-btn[data-tab="${id}"]`).classList.add('active');
+    },
+    
+    _domCache: {},
+    _getEl: function(id) { if (!this._domCache[id]) this._domCache[id] = document.getElementById(id); return this._domCache[id]; },
+    
+    renderCourse: function() {
+      this._domCache = {}; // ✅ Reset cache for dynamic elements
+      
+      const c = this._getEl('lessonsContainer'); if (!c) return;
+      const completed = courseProgress.filter(x => x).length;
+      const pEl = this._getEl('courseProgress'), bEl = this._getEl('courseBar');
+      if (pEl) pEl.textContent = `${completed}/10`; if (bEl) bEl.style.width = `${completed * 10}%`;
+      
+      const certBox = this._getEl('certificateBox');
+      if (certBox) {
+        if (courseProgress[9] && examScore === 10) {
+          if (!certData) {
+            // ✅ Улучшенная генерация ID с crypto.randomUUID() fallback
+            const randomPart = crypto.randomUUID ? crypto.randomUUID().slice(0, 8).toUpperCase() : Math.random().toString(36).substring(2, 8).toUpperCase();
+            const id = 'QWEN-PROMPT-' + randomPart;
+            certData = { id, course: "Qwen Prompt Designer / Neuroillustrator Specialist", pipeline: "qwen-prompt-designer-ethics", version: "qwen-v2.5", date: new Date().toISOString().split('T')[0], issuer: "Anti-AI Qwen Academy", compliance: ["tongyi_safety_v2", "iso_iec_42001", "creative_commons"], sig: generateCertSignature(id, "Anti-AI Qwen Academy"), skills: ["prompt_eng", "style_adapt", "ethics_review", "postprocessing", "education"] };
+            saveState();
+          }
+          if (certData) {
+            certBox.style.display = 'block';
+            this._getEl('certIdDisplay').textContent = certData.id;
+            this._getEl('certDateDisplay').textContent = certData.date;
+            this._getEl('certCourseDisplay').textContent = certData.course;
+            this._getEl('certIssuerDisplay').textContent = certData.issuer;
+            this._getEl('certPipelineDisplay').textContent = certData.pipeline;
+            this._getEl('certComplianceDisplay').textContent = certData.compliance.join(', ');
+          } else {
+            console.error('Certificate data is missing!');
+            certBox.style.display = 'none';
+          }
+        } else { certBox.style.display = 'none'; }
+      }
+
+      const fragment = document.createDocumentFragment();
+      PROMPT_DESIGNER_COURSE.forEach((l, i) => {
+        const done = courseProgress[i], locked = i > 0 && !courseProgress[i-1] && !done, active = !locked && !done;
+        let st, sc; 
+        if (done) { st = currentLang === 'ru' ? '✅ ПРОЙДЕН' : '✅ DONE'; sc = 'completed'; } 
+        else if (active) { st = currentLang === 'ru' ? '🔓 АКТИВЕН' : '🔓 ACTIVE'; sc = 'active'; } 
+        else { st = currentLang === 'ru' ? '🔒 ЗАКРЫТ' : '🔒 LOCKED'; sc = 'locked'; }
+        const card = document.createElement('div');
+        card.className = `lesson-card ${done?'completed':active?'active':'locked'}`;
+        card.innerHTML = `<div class="lesson-header"><span class="lesson-title">${this.t('day_label')} ${l.day}: ${this.getBilingual(l.title)}</span><span class="lesson-status ${sc}">${st}</span></div>`;
+        if (!locked) {
+          card.innerHTML += `<div class="lesson-content">${this.getBilingual(l.content)}</div>`;
+          if (l.case) card.innerHTML += `<div class="case-text">${this.getBilingual(l.case)}</div>`;
+          if (l.qwenFormat) card.innerHTML += `<div class="qwen-format">📦 Qwen Format: ${l.qwenFormat}</div>`;
+          card.innerHTML += `<div class="lesson-task"><b>🎯 ${this.t('task_label')}:</b> ${this.getBilingual(l.task)}</div>
+            <textarea class="lesson-input" id="task-${i}" placeholder="${this.t('answer_placeholder')}" ${done?'disabled':''}></textarea>
+            <div class="btn-group">
+              <button class="btn secondary" onclick="app.checkLesson(${i})" ${done?'disabled':''}>✅ ${this.t('check_btn')}</button>
+              <button class="btn secondary" onclick="app.showHint(${i})">💡 ${this.t('hint_btn')}</button>
+              <button class="btn secondary" onclick="app.showAnswer(${i})">👁️ ${this.t('answer_btn')}</button>
+            </div>
+            <div id="hint-${i}" style="display:none; margin-top:8px; padding:10px; background:rgba(233,30,99,0.1); border-radius:6px; font-size:0.8rem; color:var(--prompt);"></div>
+            <div id="answer-${i}" style="display:none; margin-top:8px; padding:10px; background:rgba(233,30,99,0.1); border-radius:6px; font-size:0.8rem; color:var(--prompt);"></div>
+            <div class="lesson-feedback" id="feedback-${i}"></div>`;
+        } else { card.innerHTML += `<p style="color:var(--muted); font-size:0.85rem;">🔒 ${this.t('locked_msg')}</p>`; }
+        fragment.appendChild(card);
+      });
+      c.innerHTML = ''; c.appendChild(fragment);
+      if (courseProgress.slice(0,9).every(x=>x) && !courseProgress[9] && examScore !== 10) this.renderExam();
+    },
+    
+    checkLesson: function(i) {
+      const inp = this._getEl(`task-${i}`)?.value.trim(), fb = this._getEl(`feedback-${i}`);
+      if (!inp || !fb) return;
+      if (inp.length < 10) { fb.className='lesson-feedback error'; fb.style.display='block'; fb.innerHTML=`⚠️ <b>${this.t('too_short')}</b>`; return; }
+      const checkFn = PROMPT_DESIGNER_COURSE[i].check;
+      if (typeof checkFn !== 'function') {
+        fb.className='lesson-feedback error';
+        fb.innerHTML = `⚠️ Ошибка: для этого урока не определена проверка.`;
+        return;
+      }
+      const ok = checkFn(inp); fb.style.display='block';
+      if (ok) { courseProgress[i]=true; saveState(); this.renderCourse(); fb.className='lesson-feedback success'; fb.innerHTML=this.t('correct'); speak(this.t('correct'), true); }
+      else { fb.className='lesson-feedback error'; fb.innerHTML=this.t('incorrect'); speak(this.t('incorrect'), true); }
+    },
+    
+    showHint: function(i) { const h=this._getEl(`hint-${i}`); if(!h)return; h.style.display=h.style.display==='none'?'block':'none'; h.textContent='💡 '+this.getBilingual(PROMPT_DESIGNER_COURSE[i].hint); },
+    showAnswer: function(i) { const a=this._getEl(`answer-${i}`); if(!a)return; a.style.display=a.style.display==='none'?'block':'none'; a.textContent='📚 '+this.t('answer_btn')+': '+this.getBilingual(PROMPT_DESIGNER_COURSE[i].hint); },
+    
+    renderExam: function() {
+      if (courseProgress[9]) return; const l=PROMPT_DESIGNER_COURSE[9], c=this._getEl('examContainer'); if(!c)return;
+      let h = `<div class="card" style="border-color:var(--prompt); background:rgba(233,30,99,0.05); margin-top:16px;">
+        <h3>🏆 ${this.t('final_exam')}</h3><p style="margin:12px 0;">${this.t('exam_instr')}</p>`;
+      l.examQuestions.forEach((q, i) => {
+        h += `<div class="exam-question" id="eq${i}"><p style="margin-bottom:8px;"><b>${this.t('question')} ${i+1}:</b> ${this.getBilingual(q.q)}</p>
+          <div class="exam-options">
+            <label><input type="radio" name="exam${i}" value="true"> ✅ ${this.t('true_opt')}</label>
+            <label><input type="radio" name="exam${i}" value="false"> ❌ ${this.t('false_opt')}</label>
+          </div></div>`;
+      });
+      h += `<button class="btn" onclick="app.submitExam()" style="width:100%; margin-top:16px; font-size:1.1rem;">📝 ${this.t('submit_exam')}</button>
+        <div id="examResult" style="margin-top:16px; display:none;"></div></div>`;
+      c.innerHTML = h;
+    },
+    
+    submitExam: function() {
+      let correct = 0; PROMPT_DESIGNER_COURSE[9].examQuestions.forEach((q, i) => {
+        const sel = document.querySelector(`input[name="exam${i}"]:checked`);
+        if (sel) { const ok = (sel.value==='true') === q.correct; if(ok)correct++; const e=document.getElementById(`eq${i}`); if(e){e.classList.add('answered'); e.style.borderLeft=`3px solid ${ok?'var(--success)':'var(--danger)'}`; } }
+      });
+      examScore = correct; saveState();
+      const res = this._getEl('examResult'); res.style.display='block';
+      if (correct===10) {
+        courseProgress[9]=true; saveState(); this.renderCourse();
+        res.innerHTML = `<div style="text-align:center;padding:24px;background:rgba(46,204,113,0.15);border-radius:12px;border:2px solid var(--success);">
+          <h3 style="color:var(--success);font-size:1.8rem;">🎉 ${this.t('exam_perfect')}</h3>
+          <p style="font-size:1.3rem;margin:16px 0;"><b>10 ${this.t('out_of')} 10</b></p>
+          <p style="font-size:1.1rem;color:var(--gold);">🏆 ${this.t('cert_unlocked')}</p></div>`;
+        speak(this.t('exam_perfect'), true);
+      } else {
+        res.innerHTML = `<div style="text-align:center;padding:24px;background:rgba(231,76,60,0.15);border-radius:12px;border:2px solid var(--danger);">
+          <h3 style="color:var(--danger);font-size:1.5rem;">😔 ${this.t('exam_failed', {score:correct})}</h3>
+          <button class="btn secondary" onclick="app.renderExam()" style="margin-top:12px;">🔄 ${this.t('retry_btn')}</button></div>`;
+        speak(this.t('exam_failed', {score:correct}), true);
+      }
+    },
+
+    // ========== 🛠️ TOOLS ==========
+    renderTools: function() {
+      this.renderStyleLibrary();
+      this.renderEthicsChecklist();
+      this.newPromptDoc();
+    },
+
+    renderStyleLibrary: function() {
+      const container = document.getElementById('styleLibrary');
+      if(!container) return;
+      container.innerHTML = '';
+      STYLE_LIBRARY.forEach(style => {
+        const chip = document.createElement('span');
+        chip.className = 'style-chip';
+        chip.textContent = this.getBilingual(style.name);
+        chip.onclick = () => {
+          document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          const promptInput = document.getElementById('promptInput');
+          if(promptInput) {
+            const current = promptInput.value.trim();
+            const styleKeyword = style.id === 'watercolor' ? 'watercolor style' : style.id === 'minimal' ? 'minimalist style' : style.id === 'vintage' ? 'vintage style' : style.id === 'illustration' ? 'illustration style' : 'photorealistic style';
+            promptInput.value = current ? `${current}, ${styleKeyword}` : styleKeyword;
+          }
+        };
+        container.appendChild(chip);
+      });
+    },
+
+    renderEthicsChecklist: function() {
+      const container = document.getElementById('ethicsChecklist');
+      if(!container) return;
+      container.innerHTML = '';
+      ETHICS_CHECKLIST.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `ethics-item${item.warning ? ' warning' : item.danger ? ' danger' : ''}`;
+        div.innerHTML = `<input type="checkbox" id="ethics-${item.id}"><label for="ethics-${item.id}">${this.getBilingual(item.text)}</label>`;
+        container.appendChild(div);
+      });
+    },
+
+    checkEthics: function() {
+      const items = ETHICS_CHECKLIST.map(item => {
+        const checkbox = document.getElementById(`ethics-${item.id}`);
+        return { id: item.id, checked: checkbox?.checked || false, warning: item.warning };
+      });
+      const warnings = items.filter(i => i.warning && !i.checked);
+      const result = document.getElementById('ethicsResult');
+      if(!result) return;
+      result.style.display = 'block';
+      if(warnings.length === 0 && items.every(i => i.checked)) {
+        result.innerHTML = `<span style="color:var(--success);">✅ ${this.t('practice_correct')}<br><small>Изображение готово к использованию</small></span>`;
+        speak('Ethics check passed!', true);
+      } else if(warnings.length > 0) {
+        result.innerHTML = `<span style="color:var(--warning);">⚠️ ${this.t('practice_incorrect')}<br><small>Проверьте отмеченные пункты: ${warnings.map(w => w.id).join(', ')}</small></span>`;
+      } else {
+        result.innerHTML = `<span style="color:var(--muted);">ℹ️ Заполните все пункты для полной проверки</span>`;
+      }
+    },
+
+    generatePromptPreview: function() {
+      const prompt = document.getElementById('promptInput')?.value.trim();
+      const model = document.getElementById('modelSelect')?.value || 'midjourney';
+      const aspect = document.getElementById('aspectSelect')?.value || '1:1';
+      const style = document.getElementById('styleSelect')?.value || 'illustration';
+      const seed = document.getElementById('seedInput')?.value;
+      const negative = document.getElementById('negativeInput')?.value.trim();
+      const audience = document.querySelector('.audience-chip.active')?.dataset.audience || 'general';
+      const preview = document.getElementById('promptPreview');
+      if (!prompt || !preview) return;
+      
+      const audienceModifiers = {
+        general: '',
+        children: ', child-friendly, soft colors, no scary elements',
+        seniors: ', clear composition, high contrast, readable details',
+        inclusive: ', diverse representation, accessible design, inclusive imagery'
+      };
+      
+      const qwenPrompt = {
+        type: "qwen_prompt_record",
+        version: "qwen-v2.5",
+        title: "Library Project Illustration",
+        prompt: prompt + (audienceModifiers[audience] || ''),
+        model: model,
+        parameters: {
+          aspect_ratio: aspect,
+          style: style,
+          seed: seed ? parseInt(seed) : null
+        },
+        negative_prompts: negative || "no text, no watermark, no blur",
+        ethics_notes: {
+          diversity_check: "pending",
+          stereotype_check: "pending",
+          copyright_check: "pending"
+        },
+        license: "CC-BY-SA",
+        usage_context: "library educational material",
+        created_at: new Date().toISOString()
+      };
+      
+      preview.textContent = JSON.stringify(qwenPrompt, null, 2);
+      preview.style.display = 'block';
+    },
+
+    generateDoc: function() {
+      const title = document.getElementById('docTitle')?.value.trim() || 'Untitled Prompt';
+      const tags = document.getElementById('docTags')?.value.trim().split(',').map(t => t.trim()).filter(t => t) || [];
+      const notes = document.getElementById('docNotes')?.value.trim() || '';
+      const prompt = document.getElementById('promptInput')?.value.trim() || '';
+      const output = document.getElementById('docOutput');
+      if(!output) return;
+      
+      const doc = {
+        title: title,
+        tags: tags,
+        prompt: prompt,
+        notes: notes,
+        metadata: {
+          created_by: "Prompt Designer Specialist",
+          project: "anti-ai-qwen-academy",
+          license: "CC-BY-SA",
+          language: currentLang
+        },
+        usage_guidelines: {
+          approved_for: ["library posters", "educational materials", "social media"],
+          requires_attribution: true,
+          commercial_use: false
+        }
+      };
+      
+      output.textContent = JSON.stringify(doc, null, 2);
+      output.style.display = 'block';
+    },
+
+    newPromptDoc: function() {
+      // Initialize tools on first render
+    },
+    
+    resetProgress: function() {
+      if(confirm(this.t('reset_confirm'))) {
+        localStorage.removeItem('qwen_pd_progress'); localStorage.removeItem('qwen_pd_exam'); localStorage.removeItem('qwen_pd_certificate');
+        courseProgress=Array(10).fill(false); examScore=0; certData=null; saveState(); this.renderCourse();
+        speak(this.t('progress_reset'), true); alert(this.t('reset_done'));
+      }
+    },
+    
+    // 🔹 Blob URL cleanup
+    exportCertificate: function() {
+      if(!certData){alert(this.t('cert_locked'));return;}
+      try {
+        const b=new Blob([JSON.stringify(certData,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(b);
+        const a=document.createElement('a'); a.href=url; a.download=`certificate-${certData.id}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url); speak(this.t('cert_downloaded'), true);
+      } catch(e) {
+        console.error('Export error:', e);
+        alert(this.t('cert_file_error'));
+      }
+    },
+
+    exportQwenPortfolio: function() {
+      if(!certData){alert(this.t('cert_locked'));return;}
+      try {
+        const qwenData = {
+          metadata: { cert_id: certData.id, pipeline: certData.pipeline, version: certData.version, date: certData.date, issuer: certData.issuer, compliance: certData.compliance },
+          cases: [
+            {id:"p1",type:"prompt",title:"Library Reading Corner",format:"qwen_prompt_record.json"},
+            {id:"p2",type:"ethics",title:"Inclusive Poster Audit",format:"qwen_ethics_audit.csv"},
+            {id:"p3",type:"style",title:"Watercolor Children's Book",format:"qwen_style_adaptation.json"},
+            {id:"p4",type:"education",title:"Workshop Guide for 55+",format:"qwen_workshop_guide.pdf"},
+            {id:"p5",type:"portfolio",title:"Open Prompt Catalog Entry",format:"qwen_prompt_catalog.json"}
+          ],
+          skills: certData.skills,
+          signature: generateCertSignature(certData.id, certData.issuer)
+        };
+        const b=new Blob([JSON.stringify(qwenData,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(b);
+        const a=document.createElement('a'); a.href=url; a.download=`qwen-portfolio-${certData.id}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url); speak(this.t('portfolio_downloaded'), true);
+      } catch(e) {
+        console.error('Export error:', e);
+        alert(this.t('cert_file_error'));
+      }
+    },
+    
+    printCertificate: function() {
+      if(!certData)return; 
+      const w=window.open('','_blank','width=900,height=700'); 
+      if(!w){alert('❌ Popup blocked.');return;}
+      try {
+        w.document.write(`<!DOCTYPE html><html><head><title>Certificate ${certData.id}</title><style>body{margin:0;padding:40px;font-family:system-ui;background:#0a0c14;color:#e6eaf0;min-height:100vh;display:flex;justify-content:center;align-items:center;}.cert{background:linear-gradient(135deg,rgba(233,30,99,0.15),rgba(0,212,255,0.1));border:4px solid #e91e63;border-radius:20px;padding:50px;text-align:center;max-width:800px;}h1{color:#e91e63;font-size:2.5rem;margin-bottom:20px;}.seal{width:100px;height:100px;border:4px solid #e91e63;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:30px auto;font-size:3rem;background:rgba(233,30,99,0.1);}.badge{display:inline-block;padding:10px 24px;background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;border-radius:30px;font-weight:bold;margin:20px 0;}.id{font-family:monospace;background:rgba(0,0,0,0.4);padding:8px 16px;border-radius:8px;color:#e91e63;display:inline-block;margin:12px 0;}.meta{color:#00d4ff;font-size:0.9rem;margin:8px 0;}p{font-size:1.1rem;margin:10px 0;}@media print{body{background:white;color:black;}.cert{border-color:#e91e63;background:white;}}</style></head><body><div class="cert"><div class="seal">🎨</div><h1>🎓 CERTIFICATE</h1><p style="font-size:1.3rem;margin:16px 0;"><b>${certData.issuer}</b></p><p>This certifies that</p><p style="font-size:1.2rem;color:#e91e63;margin:8px 0;font-weight:bold;">${certData.course}</p><p>has successfully completed the ethical AI art creation course for library projects</p><div class="id">${certData.id}</div><p class="meta">Pipeline: ${certData.pipeline} | Version: ${certData.version}</p><p class="meta">Compliance: ${certData.compliance.join(', ')}</p><p class="meta">Date: ${certData.date} | Issuer: ${certData.issuer}</p><div class="badge">Qwen Prompt Designer Specialist</div></div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+        w.document.close();
+        w.onafterprint = function() { try { w.close(); } catch(e) {} };
+        setTimeout(() => { try { if (!w.closed) w.close(); } catch(e) {} }, 10000);
+        speak(this.t('print_cert'), true);
+      } catch(e) { console.error('Print error:', e); w.close(); }
+    },
+    
+    validateCertificate: function() {
+      const inp=this._getEl('validateInput')?.value.trim().toUpperCase(), res=this._getEl('validateResult'); if(!res)return; res.style.display='block';
+      if(!inp||!/^QWEN-PROMPT-[A-Z0-9]{6}$/.test(inp)){res.textContent=`❌ ${this.t('invalid_format')}`;res.style.color='var(--danger)';return;}
+      if(certData && inp === certData.id) {
+        const sigValid = verifyCertSignature(certData.id, certData.issuer, certData.sig);
+        if(sigValid) { res.innerHTML=`<span style="color:var(--success);">✅ ${this.t('cert_valid')}<br><small>${this.t('issued_label')}: ${certData.date}</small></span>`; res.style.color='var(--success)'; speak(this.t('cert_valid'), true); }
+        else { res.textContent=`❌ ${this.t('cert_bad_sig')}`; res.style.color='var(--danger)'; speak(this.t('cert_bad_sig'), true); }
+      } else { res.textContent=`❌ ${this.t('cert_invalid')}`; res.style.color='var(--danger)'; speak(this.t('cert_invalid'), true); }
+    },
+    
+    copyPhone: function() {
+      const p='89202275676'; 
+      if(navigator.clipboard?.writeText) navigator.clipboard.writeText(p).then(()=>speak(this.t('copied'), true)).catch(()=>app._fallbackCopy(p));
+      else app._fallbackCopy(p);
+    },
+    _fallbackCopy: function(text) { try { const t=document.createElement('textarea'); t.value=text; t.setAttribute('readonly',''); t.style.cssText='position:fixed;top:-9999px;left:-9999px;'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); speak(this.t('copied'), true); } catch(e) { alert('Copy failed'); } },
+    openModal: function(id) { this._getEl(id)?.classList.add('open'); },
+    closeModal: function(id) { this._getEl(id)?.classList.remove('open'); },
+    toggleVoice: function() {
+      if(!isSpeechSupported()){ alert(currentLang==='ru'?'⚠️ Озвучка не поддерживается. Попробуйте Chrome/Edge.':'⚠️ Speech not supported. Try Chrome/Edge.'); return; }
+      voiceEnabled=!voiceEnabled; saveState(); updateVoiceBtn(); speak(voiceEnabled?this.t('voice_on'):this.t('voice_off'), true);
+    }
+  };
+
+  // 🔹 Audience selector interaction
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ Предзагрузка голосов для Safari
+    if (voiceEnabled && isSpeechSupported()) {
+      setTimeout(() => { loadVoicesWithRetry(); }, 100);
+    }
+    
+    // Audience chips
+    document.querySelectorAll('.audience-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.audience-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+    
+    // Style chips interaction handled in renderStyleLibrary
+    
+    app.applyLang(); updateVoiceBtn(); app.renderCourse(); app.renderTools();
+    document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); app.switchTab(b.dataset.tab); }));
+    const vBtn=document.getElementById('voiceBtn'); if(vBtn)vBtn.addEventListener('click', (e)=>{e.stopPropagation();app.toggleVoice();});
+    
+    let speechUnlocked=false; 
+    function unlock(){ if(speechUnlocked||!isSpeechSupported())return; try{ const u=new SpeechSynthesisUtterance('');u.volume=0; if(synth){synth.speak(u);synth.cancel();} speechUnlocked=true; }catch(e){} }
+    ['click','touchstart'].forEach(evt=>document.addEventListener(evt,unlock,{once:true,passive:true}));
+    setTimeout(()=>{if(!voicesLoaded&&isSpeechSupported()){loadVoicesWithRetry();}},2000);
+  });
+  
+  window.app = app;
+})();
+</script>
+</body>
+</html>
